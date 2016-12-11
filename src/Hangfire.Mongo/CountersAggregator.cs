@@ -14,7 +14,9 @@ namespace Hangfire.Mongo
     /// <summary>
     /// Represents Counter collection aggregator for Mongo database
     /// </summary>
+#pragma warning disable CS0618
     public class CountersAggregator : IBackgroundProcess, IServerComponent
+#pragma warning restore CS0618
     {
         private static readonly ILog Logger = LogProvider.For<CountersAggregator>();
 

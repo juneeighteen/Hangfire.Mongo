@@ -133,11 +133,13 @@ namespace Hangfire.Mongo
         /// Returns collection of server components
         /// </summary>
         /// <returns>Collection of server components</returns>
+#pragma warning disable CS0618
         public override IEnumerable<IServerComponent> GetComponents()
         {
             yield return new ExpirationManager(this, _options.JobExpirationCheckInterval);
             yield return new CountersAggregator(this, _options.CountersAggregateInterval);
         }
+#pragma warning restore CS0618
 
         /// <summary>
         /// Returns collection of state handers

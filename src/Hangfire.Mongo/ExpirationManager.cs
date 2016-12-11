@@ -12,7 +12,9 @@ namespace Hangfire.Mongo
     /// <summary>
     /// Represents Hangfire expiration manager for Mongo database
     /// </summary>
+#pragma warning disable CS0618
     public class ExpirationManager : IBackgroundProcess, IServerComponent
+#pragma warning restore CS0618
     {
         private static readonly ILog Logger = LogProvider.For<ExpirationManager>();
 
