@@ -80,7 +80,6 @@ namespace Hangfire.Mongo
                 Parameters = parameters?.Select(parameter =>
                         new JobParameterDto
                         {
-                            Id = ObjectId.GenerateNewId(),
                             Name = parameter.Key,
                             Value = parameter.Value
                         }).ToList() ?? new List<JobParameterDto>()
@@ -130,7 +129,6 @@ namespace Hangfire.Mongo
                     _ => _.Parameters,
                     new JobParameterDto
                     {
-                        Id = ObjectId.GenerateNewId(),
                         Name = name,
                         Value = value
                     }

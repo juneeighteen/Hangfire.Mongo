@@ -454,7 +454,6 @@ namespace Hangfire.Mongo.Tests
                     {
                         new JobParameterDto
                         {
-                            Id = ObjectId.GenerateNewId(),
                             Name = "name",
                             Value = "value"
                         }
