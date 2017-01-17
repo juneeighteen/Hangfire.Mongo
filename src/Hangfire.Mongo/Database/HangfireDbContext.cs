@@ -98,11 +98,6 @@ namespace Hangfire.Mongo.Database
         public virtual IMongoCollection<JobDto> Job => Database.GetCollection<JobDto>(_prefix + ".job");
 
         /// <summary>
-        /// Reference to collection which contains jobs parameters
-        /// </summary>
-        public virtual IMongoCollection<JobParameterDto> JobParameter => Database.GetCollection<JobParameterDto>(_prefix + ".jobParameter");
-
-        /// <summary>
         /// Reference to collection which contains jobs queues
         /// </summary>
         public virtual IMongoCollection<JobQueueDto> JobQueue => Database.GetCollection<JobQueueDto>(_prefix + ".jobQueue");
@@ -163,7 +158,6 @@ namespace Hangfire.Mongo.Database
         {
             // Create for jobid on state, jobParameter, jobQueue
             State.CreateDescendingIndex(p => p.JobId);
-            JobParameter.CreateDescendingIndex(p => p.JobId);
             JobQueue.CreateDescendingIndex(p => p.JobId);
         }
 

@@ -23,7 +23,7 @@ namespace Hangfire.Mongo.Tests
         public MongoWriteOnlyTransactionFacts()
         {
             Mock<IPersistentJobQueueProvider> defaultProvider = new Mock<IPersistentJobQueueProvider>();
-            defaultProvider.Setup(x => x.GetJobQueue(It.IsNotNull<HangfireDbContext>()))
+            defaultProvider.Setup(_ => _.GetJobQueue(It.IsNotNull<HangfireDbContext>()))
                 .Returns(new Mock<IPersistentJobQueue>().Object);
 
             _queueProviders = new PersistentJobQueueProviderCollection(defaultProvider.Object);
@@ -71,7 +71,7 @@ namespace Hangfire.Mongo.Tests
                 var jobId = job.Id;
                 var anotherJobId = anotherJob.Id;
 
-                Commit(database, x => x.ExpireJob(jobId.ToString(), TimeSpan.FromDays(1)));
+                Commit(database, _ => _.ExpireJob(jobId.ToString(), TimeSpan.FromDays(1)));
 
                 var testJob = GetTestJob(database, jobId);
                 Assert.True(database.GetServerTimeUtc().AddMinutes(-1) < testJob.ExpireAt && testJob.ExpireAt <= database.GetServerTimeUtc().AddDays(1));
@@ -109,7 +109,7 @@ namespace Hangfire.Mongo.Tests
                 var jobId = job.Id;
                 var anotherJobId = anotherJob.Id;
 
-                Commit(database, x => x.PersistJob(jobId.ToString()));
+                Commit(database, _ => _.PersistJob(jobId.ToString()));
 
                 var testjob = GetTestJob(database, jobId);
                 Assert.Null(testjob.ExpireAt);
@@ -147,11 +147,11 @@ namespace Hangfire.Mongo.Tests
 	            var serializedData = new Dictionary<string, string> {{"Name", "Value"}};
 
 				var state = new Mock<IState>();
-                state.Setup(x => x.Name).Returns("State");
-                state.Setup(x => x.Reason).Returns("Reason");
-                state.Setup(x => x.SerializeData()).Returns(serializedData);
+                state.Setup(_ => _.Name).Returns("State");
+                state.Setup(_ => _.Reason).Returns("Reason");
+                state.Setup(_ => _.SerializeData()).Returns(serializedData);
 
-                Commit(database, x => x.SetJobState(jobId.ToString(), state.Object));
+                Commit(database, _ => _.SetJobState(jobId.ToString(), state.Object));
 
                 var testJob = GetTestJob(database, jobId);
                 Assert.Equal("State", testJob.StateName);
@@ -188,11 +188,11 @@ namespace Hangfire.Mongo.Tests
 	            var serializedData = new Dictionary<string, string> {{"Name", "Value"}};
 
 				var state = new Mock<IState>();
-                state.Setup(x => x.Name).Returns("State");
-                state.Setup(x => x.Reason).Returns("Reason");
-                state.Setup(x => x.SerializeData()).Returns(serializedData);
+                state.Setup(_ => _.Name).Returns("State");
+                state.Setup(_ => _.Reason).Returns("Reason");
+                state.Setup(_ => _.SerializeData()).Returns(serializedData);
 
-                Commit(database, x => x.AddJobState(jobId.ToString(), state.Object));
+                Commit(database, _ => _.AddJobState(jobId.ToString(), state.Object));
 
                 var testJob = GetTestJob(database, jobId);
                 Assert.Null(testJob.StateName);
@@ -214,14 +214,14 @@ namespace Hangfire.Mongo.Tests
             {
                 var correctJobQueue = new Mock<IPersistentJobQueue>();
                 var correctProvider = new Mock<IPersistentJobQueueProvider>();
-                correctProvider.Setup(x => x.GetJobQueue(It.IsNotNull<HangfireDbContext>()))
+                correctProvider.Setup(_ => _.GetJobQueue(It.IsNotNull<HangfireDbContext>()))
                     .Returns(correctJobQueue.Object);
 
                 _queueProviders.Add(correctProvider.Object, new[] { "default" });
 
-                Commit(database, x => x.AddToQueue("default", "1"));
+                Commit(database, _ => _.AddToQueue("default", "1"));
 
-                correctJobQueue.Verify(x => x.Enqueue("default", "1"));
+                correctJobQueue.Verify(_ => _.Enqueue("default", "1"));
             });
         }
 
@@ -230,7 +230,7 @@ namespace Hangfire.Mongo.Tests
         {
             UseConnection(database =>
             {
-                Commit(database, x => x.IncrementCounter("my-key"));
+                Commit(database, _ => _.IncrementCounter("my-key"));
 
                 CounterDto record = database.Counter.Find(new BsonDocument()).ToList().Single();
 
@@ -245,7 +245,7 @@ namespace Hangfire.Mongo.Tests
         {
             UseConnection(database =>
             {
-                Commit(database, x => x.IncrementCounter("my-key", TimeSpan.FromDays(1)));
+                Commit(database, _ => _.IncrementCounter("my-key", TimeSpan.FromDays(1)));
 
                 CounterDto record = database.Counter.Find(new BsonDocument()).ToList().Single();
 
@@ -282,7 +282,7 @@ namespace Hangfire.Mongo.Tests
         {
             UseConnection(database =>
             {
-                Commit(database, x => x.DecrementCounter("my-key"));
+                Commit(database, _ => _.DecrementCounter("my-key"));
 
                 CounterDto record = database.Counter.Find(new BsonDocument()).ToList().Single();
 
@@ -297,7 +297,7 @@ namespace Hangfire.Mongo.Tests
         {
             UseConnection(database =>
             {
-                Commit(database, x => x.DecrementCounter("my-key", TimeSpan.FromDays(1)));
+                Commit(database, _ => _.DecrementCounter("my-key", TimeSpan.FromDays(1)));
 
                 CounterDto record = database.Counter.Find(new BsonDocument()).ToList().Single();
 
@@ -334,7 +334,7 @@ namespace Hangfire.Mongo.Tests
         {
             UseConnection(database =>
             {
-                Commit(database, x => x.AddToSet("my-key", "my-value"));
+                Commit(database, _ => _.AddToSet("my-key", "my-value"));
 
                 SetDto record = database.Set.Find(new BsonDocument()).ToList().Single();
 
@@ -383,7 +383,7 @@ namespace Hangfire.Mongo.Tests
         {
             UseConnection(database =>
             {
-                Commit(database, x => x.AddToSet("my-key", "my-value", 3.2));
+                Commit(database, _ => _.AddToSet("my-key", "my-value", 3.2));
 
                 SetDto record = database.Set.Find(new BsonDocument()).ToList().Single();
 
@@ -466,7 +466,7 @@ namespace Hangfire.Mongo.Tests
         {
             UseConnection(database =>
             {
-                Commit(database, x => x.InsertToList("my-key", "my-value"));
+                Commit(database, _ => _.InsertToList("my-key", "my-value"));
 
                 ListDto record = database.List.Find(new BsonDocument()).ToList().Single();
 
@@ -642,7 +642,7 @@ namespace Hangfire.Mongo.Tests
             UseConnection(database =>
             {
                 ArgumentNullException exception = Assert.Throws<ArgumentNullException>(
-                    () => Commit(database, x => x.SetRangeInHash(null, new Dictionary<string, string>())));
+                    () => Commit(database, _ => _.SetRangeInHash(null, new Dictionary<string, string>())));
 
                 Assert.Equal("key", exception.ParamName);
             });
@@ -654,7 +654,7 @@ namespace Hangfire.Mongo.Tests
             UseConnection(database =>
             {
                 var exception = Assert.Throws<ArgumentNullException>(
-                    () => Commit(database, x => x.SetRangeInHash("some-hash", null)));
+                    () => Commit(database, _ => _.SetRangeInHash("some-hash", null)));
 
                 Assert.Equal("keyValuePairs", exception.ParamName);
             });
@@ -665,14 +665,14 @@ namespace Hangfire.Mongo.Tests
         {
             UseConnection(database =>
             {
-                Commit(database, x => x.SetRangeInHash("some-hash", new Dictionary<string, string>
+                Commit(database, _ => _.SetRangeInHash("some-hash", new Dictionary<string, string>
                         {
                             { "Key1", "Value1" },
                             { "Key2", "Value2" }
                         }));
 
                 var result = database.Hash.Find(Builders<HashDto>.Filter.Eq(_ => _.Key, "some-hash")).ToList()
-                    .ToDictionary(x => x.Field, x => x.Value);
+                    .ToDictionary(_ => _.Field, _ => _.Value);
 
                 Assert.Equal("Value1", result["Key1"]);
                 Assert.Equal("Value2", result["Key2"]);
@@ -685,7 +685,7 @@ namespace Hangfire.Mongo.Tests
             UseConnection(database =>
             {
                 Assert.Throws<ArgumentNullException>(
-                    () => Commit(database, x => x.RemoveHash(null)));
+                    () => Commit(database, _ => _.RemoveHash(null)));
             });
         }
 
@@ -695,14 +695,14 @@ namespace Hangfire.Mongo.Tests
             UseConnection(database =>
             {
                 // Arrange
-                Commit(database, x => x.SetRangeInHash("some-hash", new Dictionary<string, string>
+                Commit(database, _ => _.SetRangeInHash("some-hash", new Dictionary<string, string>
                         {
                             { "Key1", "Value1" },
                             { "Key2", "Value2" }
                         }));
 
                 // Act
-                Commit(database, x => x.RemoveHash("some-hash"));
+                Commit(database, _ => _.RemoveHash("some-hash"));
 
                 // Assert
                 var count = database.Hash.Count(new BsonDocument());
@@ -721,7 +721,7 @@ namespace Hangfire.Mongo.Tests
                 var set2 = new SetDto { Key = "Set2", Value = "value2" };
                 database.Set.InsertOne(set2);
 
-                Commit(database, x => x.ExpireSet(set1.Key, TimeSpan.FromDays(1)));
+                Commit(database, _ => _.ExpireSet(set1.Key, TimeSpan.FromDays(1)));
 
                 var testSet1 = GetTestSet(database, set1.Key).FirstOrDefault();
                 Assert.True(database.GetServerTimeUtc().AddMinutes(-1) < testSet1.ExpireAt && testSet1.ExpireAt <= database.GetServerTimeUtc().AddDays(1));
@@ -743,7 +743,7 @@ namespace Hangfire.Mongo.Tests
                 var list2 = new ListDto { Key = "List2", Value = "value2" };
                 database.List.InsertOne(list2);
 
-                Commit(database, x => x.ExpireList(list1.Key, TimeSpan.FromDays(1)));
+                Commit(database, _ => _.ExpireList(list1.Key, TimeSpan.FromDays(1)));
 
                 var testList1 = GetTestList(database, list1.Key);
                 Assert.True(database.GetServerTimeUtc().AddMinutes(-1) < testList1.ExpireAt && testList1.ExpireAt <= database.GetServerTimeUtc().AddDays(1));
@@ -764,7 +764,7 @@ namespace Hangfire.Mongo.Tests
                 var hash2 = new HashDto { Key = "Hash2", Value = "value2" };
                 database.Hash.InsertOne(hash2);
 
-                Commit(database, x => x.ExpireHash(hash1.Key, TimeSpan.FromDays(1)));
+                Commit(database, _ => _.ExpireHash(hash1.Key, TimeSpan.FromDays(1)));
 
                 var testHash1 = GetTestHash(database, hash1.Key);
                 Assert.True(database.GetServerTimeUtc().AddMinutes(-1) < testHash1.ExpireAt && testHash1.ExpireAt <= database.GetServerTimeUtc().AddDays(1));
@@ -786,7 +786,7 @@ namespace Hangfire.Mongo.Tests
                 var set2 = new SetDto { Key = "Set2", Value = "value2", ExpireAt = database.GetServerTimeUtc() };
                 database.Set.InsertOne(set2);
 
-                Commit(database, x => x.PersistSet(set1.Key));
+                Commit(database, _ => _.PersistSet(set1.Key));
 
                 var testSet1 = GetTestSet(database, set1.Key).First();
                 Assert.Null(testSet1.ExpireAt);
@@ -807,7 +807,7 @@ namespace Hangfire.Mongo.Tests
                 var list2 = new ListDto { Key = "List2", Value = "value2", ExpireAt = database.GetServerTimeUtc() };
                 database.List.InsertOne(list2);
 
-                Commit(database, x => x.PersistList(list1.Key));
+                Commit(database, _ => _.PersistList(list1.Key));
 
                 var testList1 = GetTestList(database, list1.Key);
                 Assert.Null(testList1.ExpireAt);
@@ -828,7 +828,7 @@ namespace Hangfire.Mongo.Tests
                 var hash2 = new HashDto { Key = "Hash2", Value = "value2", ExpireAt = database.GetServerTimeUtc() };
                 database.Hash.InsertOne(hash2);
 
-                Commit(database, x => x.PersistHash(hash1.Key));
+                Commit(database, _ => _.PersistHash(hash1.Key));
 
                 var testHash1 = GetTestHash(database, hash1.Key);
                 Assert.Null(testHash1.ExpireAt);
@@ -853,7 +853,7 @@ namespace Hangfire.Mongo.Tests
                 database.Set.InsertOne(set2);
 
                 var values = new[] { "test1", "test2", "test3" };
-                Commit(database, x => x.AddRangeToSet(set1Val1.Key, values));
+                Commit(database, _ => _.AddRangeToSet(set1Val1.Key, values));
 
                 var testSet1 = GetTestSet(database, set1Val1.Key);
                 Assert.NotNull(testSet1);
@@ -880,7 +880,7 @@ namespace Hangfire.Mongo.Tests
                 var set2 = new SetDto { Key = "Set2", Value = "value2", ExpireAt = database.GetServerTimeUtc() };
                 database.Set.InsertOne(set2);
 
-                Commit(database, x => x.RemoveSet(set1Val1.Key));
+                Commit(database, _ => _.RemoveSet(set1Val1.Key));
 
                 var testSet1 = GetTestSet(database, set1Val1.Key);
                 Assert.Equal(0, testSet1.Count);

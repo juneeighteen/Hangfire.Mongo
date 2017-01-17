@@ -33,9 +33,9 @@ namespace Hangfire.Mongo
             return UseConnection<IList<QueueWithTopEnqueuedJobsDto>>(connection =>
             {
                 var tuples = _queueProviders
-                    .Select(x => x.GetJobQueueMonitoringApi(connection))
-                    .SelectMany(x => x.GetQueues(), (monitoring, queue) => new { Monitoring = monitoring, Queue = queue })
-                    .OrderBy(x => x.Queue)
+                    .Select(_ => _.GetJobQueueMonitoringApi(connection))
+                    .SelectMany(_ => _.GetQueues(), (monitoring, queue) => new { Monitoring = monitoring, Queue = queue })
+                    .OrderBy(_ => _.Queue)
                     .ToArray();
 
                 var result = new List<QueueWithTopEnqueuedJobsDto>(tuples.Length);
@@ -92,10 +92,11 @@ namespace Hangfire.Mongo
                 if (job == null)
                     return null;
 
-                Dictionary<string, string> parameters = connection.JobParameter
-                    .Find(Builders<JobParameterDto>.Filter.Eq(_ => _.JobId, new ObjectId(jobId)))
+                Dictionary<string, string> parameters = connection.Job
+                    .Find(Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(jobId)))
                     .ToList()
-                    .ToDictionary(x => x.Name, x => x.Value);
+                    .SelectMany(x => x.Parameters)
+                    .ToDictionary(_ => _.Name, _ => _.Value);
 
                 List<StateHistoryDto> history = connection.State
                     .Find(Builders<StateDto>.Filter.Eq(_ => _.JobId, new ObjectId(jobId)))
@@ -152,7 +153,7 @@ namespace Hangfire.Mongo
                 stats.Recurring = connection.Set.Count(Builders<SetDto>.Filter.Eq(_ => _.Key, "recurring-jobs"));
 
                 stats.Queues = _queueProviders
-                    .SelectMany(x => x.GetJobQueueMonitoringApi(connection).GetQueues())
+                    .SelectMany(_ => _.GetJobQueueMonitoringApi(connection).GetQueues())
                     .Count();
 
                 return stats;
@@ -527,14 +528,14 @@ namespace Hangfire.Mongo
                 endDate = endDate.AddDays(-1);
             }
 
-            var stringDates = dates.Select(x => x.ToString("yyyy-MM-dd")).ToList();
+            var stringDates = dates.Select(_ => _.ToString("yyyy-MM-dd")).ToList();
             var keys = stringDates.Select(x => $"stats:{type}:{x}").ToList();
 
             var valuesMap = connection.AggregatedCounter
                 .Find(Builders<AggregatedCounterDto>.Filter.In(_ => _.Key, keys))
                 .ToList()
-                .GroupBy(x => x.Key)
-                .ToDictionary(x => x.Key, x => (long)x.Count());
+                .GroupBy(_ => _.Key)
+                .ToDictionary(_ => _.Key, x => (long)x.Count());
 
             foreach (var key in keys)
             {
@@ -565,8 +566,8 @@ namespace Hangfire.Mongo
 
             var valuesMap = connection.Counter.Find(Builders<CounterDto>.Filter.In(_ => _.Key, keys))
                 .ToList()
-                .GroupBy(x => x.Key, x => x)
-                .ToDictionary(x => x.Key, x => (long)x.Count());
+                .GroupBy(_ => _.Key, _ => _)
+                .ToDictionary(_ => _.Key, x => (long)x.Count());
 
             foreach (var key in keys.Where(key => !valuesMap.ContainsKey(key)))
             {

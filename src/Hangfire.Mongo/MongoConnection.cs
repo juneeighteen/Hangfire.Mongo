@@ -76,25 +76,18 @@ namespace Hangfire.Mongo
                 InvocationData = JobHelper.ToJson(invocationData),
                 Arguments = invocationData.Arguments,
                 CreatedAt = createdAt,
-                ExpireAt = createdAt.Add(expireIn)
+                ExpireAt = createdAt.Add(expireIn),
+                Parameters = parameters?.Select(parameter =>
+                        new JobParameterDto
+                        {
+                            Id = ObjectId.GenerateNewId(),
+                            Name = parameter.Key,
+                            Value = parameter.Value
+                        }).ToList() ?? new List<JobParameterDto>()
             };
 
             Database.Job.InsertOne(jobDto);
-
             var jobId = jobDto.Id;
-
-            if (parameters.Count > 0)
-            {
-                Database
-                    .JobParameter
-                    .InsertMany(parameters.Select(parameter =>
-                        new JobParameterDto
-                        {
-                            JobId = jobId,
-                            Name = parameter.Key,
-                            Value = parameter.Value
-                        }));
-            }
 
             return jobId.ToString();
         }
@@ -127,15 +120,23 @@ namespace Hangfire.Mongo
             if (name == null)
                 throw new ArgumentNullException(nameof(name));
 
-            Database.JobParameter
-                .UpdateMany(
-                    Builders<JobParameterDto>.Filter.Eq(_ => _.JobId, new ObjectId(id)) &
-                    Builders<JobParameterDto>.Filter.Eq(_ => _.Name, name),
-                    Builders<JobParameterDto>.Update.Set(_ => _.Value, value),
-                    new UpdateOptions
+            var filter = Builders<JobDto>.Filter.Where(x => x.Id == new ObjectId(id) && x.Parameters.Any(i => i.Name == name));
+            var update = Builders<JobDto>.Update.Set(x => x.Parameters[-1].Value, value);
+            var result = Database.Job.UpdateMany(filter, update);
+            if (result.MatchedCount == 0)
+            {
+                filter = Builders<JobDto>.Filter.Where(x => x.Id == new ObjectId(id));
+                var addToSet = Builders<JobDto>.Update.AddToSet(
+                    _ => _.Parameters,
+                    new JobParameterDto
                     {
-                        IsUpsert = true
-                    });
+                        Id = ObjectId.GenerateNewId(),
+                        Name = name,
+                        Value = value
+                    }
+                );
+                result = Database.Job.UpdateMany(filter, addToSet);
+            }
         }
 
         public override string GetJobParameter(string id, string name)
@@ -146,9 +147,10 @@ namespace Hangfire.Mongo
             if (name == null)
                 throw new ArgumentNullException(nameof(name));
 
-            var jobParameter = Database.JobParameter
-                .Find(Builders<JobParameterDto>.Filter.Eq(_ => _.JobId, new ObjectId(id)) &
-                      Builders<JobParameterDto>.Filter.Eq(_ => _.Name, name)).FirstOrDefault();
+            var jobParameter = Database.Job.AsQueryable()
+                .Where(_ => _.Id == new ObjectId(id))
+                .SelectMany(_ => _.Parameters)
+                .FirstOrDefault(_ => _.Name == name);
 
             return jobParameter?.Value;
         }
@@ -217,7 +219,7 @@ namespace Hangfire.Mongo
                 Name = state.Name,
                 Reason = state.Reason,
                 Data = state.Data
-			};
+            };
         }
 
         public override void AnnounceServer(string serverId, ServerContext context)
@@ -322,7 +324,7 @@ namespace Hangfire.Mongo
 
             var result = Database.Hash
                 .Find(Builders<HashDto>.Filter.Eq(_ => _.Key, key))
-                .ToList().ToDictionary(x => x.Field, x => x.Value);
+                .ToList().ToDictionary(_ => _.Field, _ => _.Value);
 
             return result.Count != 0 ? result : null;
         }

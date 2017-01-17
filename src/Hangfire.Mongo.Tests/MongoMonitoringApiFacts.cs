@@ -34,8 +34,8 @@ namespace Hangfire.Mongo.Tests
             _persistentJobQueueMonitoringApi = new Mock<IPersistentJobQueueMonitoringApi>();
 
             _provider = new Mock<IPersistentJobQueueProvider>();
-            _provider.Setup(x => x.GetJobQueue(It.IsNotNull<HangfireDbContext>())).Returns(_queue.Object);
-            _provider.Setup(x => x.GetJobQueueMonitoringApi(It.IsNotNull<HangfireDbContext>()))
+            _provider.Setup(_ => _.GetJobQueue(It.IsNotNull<HangfireDbContext>())).Returns(_queue.Object);
+            _provider.Setup(_ => _.GetJobQueueMonitoringApi(It.IsNotNull<HangfireDbContext>()))
                 .Returns(_persistentJobQueueMonitoringApi.Object);
 
             _providers = new PersistentJobQueueProviderCollection(_provider.Object);
@@ -108,7 +108,7 @@ namespace Hangfire.Mongo.Tests
             {
                 var jobIds = new List<ObjectId>();
 
-                _persistentJobQueueMonitoringApi.Setup(x => x
+                _persistentJobQueueMonitoringApi.Setup(_ => _
                     .GetEnqueuedJobIds(DefaultQueue, From, PerPage))
                     .Returns(jobIds);
 
@@ -126,7 +126,7 @@ namespace Hangfire.Mongo.Tests
                 var unfetchedJob = CreateJobInState(database, EnqueuedState.StateName);
 
                 var jobIds = new List<ObjectId> { unfetchedJob.Id };
-                _persistentJobQueueMonitoringApi.Setup(x => x
+                _persistentJobQueueMonitoringApi.Setup(_ => _
                     .GetEnqueuedJobIds(DefaultQueue, From, PerPage))
                     .Returns(jobIds);
 
@@ -144,7 +144,7 @@ namespace Hangfire.Mongo.Tests
                 var fetchedJob = CreateJobInState(database, FetchedStateName);
 
                 var jobIds = new List<ObjectId> { fetchedJob.Id };
-                _persistentJobQueueMonitoringApi.Setup(x => x
+                _persistentJobQueueMonitoringApi.Setup(_ => _
                     .GetEnqueuedJobIds(DefaultQueue, From, PerPage))
                     .Returns(jobIds);
 
@@ -164,7 +164,7 @@ namespace Hangfire.Mongo.Tests
                 var fetchedJob = CreateJobInState(database, FetchedStateName);
 
                 var jobIds = new List<ObjectId> { unfetchedJob.Id, unfetchedJob2.Id, fetchedJob.Id };
-                _persistentJobQueueMonitoringApi.Setup(x => x
+                _persistentJobQueueMonitoringApi.Setup(_ => _
                     .GetEnqueuedJobIds(DefaultQueue, From, PerPage))
                     .Returns(jobIds);
 
@@ -181,7 +181,7 @@ namespace Hangfire.Mongo.Tests
             {
                 var jobIds = new List<ObjectId>();
 
-                _persistentJobQueueMonitoringApi.Setup(x => x
+                _persistentJobQueueMonitoringApi.Setup(_ => _
                     .GetFetchedJobIds(DefaultQueue, From, PerPage))
                     .Returns(jobIds);
 
@@ -199,7 +199,7 @@ namespace Hangfire.Mongo.Tests
                 var fetchedJob = CreateJobInState(database, FetchedStateName);
 
                 var jobIds = new List<ObjectId> { fetchedJob.Id };
-                _persistentJobQueueMonitoringApi.Setup(x => x
+                _persistentJobQueueMonitoringApi.Setup(_ => _
                     .GetFetchedJobIds(DefaultQueue, From, PerPage))
                     .Returns(jobIds);
 
@@ -217,7 +217,7 @@ namespace Hangfire.Mongo.Tests
                 var unfetchedJob = CreateJobInState(database, EnqueuedState.StateName);
 
                 var jobIds = new List<ObjectId> { unfetchedJob.Id };
-                _persistentJobQueueMonitoringApi.Setup(x => x
+                _persistentJobQueueMonitoringApi.Setup(_ => _
                     .GetFetchedJobIds(DefaultQueue, From, PerPage))
                     .Returns(jobIds);
 
@@ -237,7 +237,7 @@ namespace Hangfire.Mongo.Tests
                 var unfetchedJob = CreateJobInState(database, EnqueuedState.StateName);
 
                 var jobIds = new List<ObjectId> { fetchedJob.Id, fetchedJob2.Id, unfetchedJob.Id };
-                _persistentJobQueueMonitoringApi.Setup(x => x
+                _persistentJobQueueMonitoringApi.Setup(_ => _
                     .GetFetchedJobIds(DefaultQueue, From, PerPage))
                     .Returns(jobIds);
 
