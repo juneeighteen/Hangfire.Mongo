@@ -12,9 +12,9 @@ namespace Hangfire.Mongo.Sample.Controllers
             return View();
         }
 
-        public ActionResult FireAndForget(ObjectId id)
+        public ActionResult FireAndForget(int id)
         {
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < id; i++)
             {
                 BackgroundJob.Enqueue(() => Debug.WriteLine("Hangfire fire-and-forget task started."));
             }
@@ -22,9 +22,9 @@ namespace Hangfire.Mongo.Sample.Controllers
             return RedirectToAction("Index");
         }
 
-        public ActionResult Delayed(ObjectId id)
+        public ActionResult Delayed(int id)
         {
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < id; i++)
             {
                 BackgroundJob.Schedule(() => Debug.WriteLine("Hangfire delayed task started!"), TimeSpan.FromMinutes(1));
             }
