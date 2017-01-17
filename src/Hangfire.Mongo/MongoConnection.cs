@@ -11,6 +11,7 @@ using Hangfire.Mongo.PersistentJobQueue;
 using Hangfire.Server;
 using Hangfire.Storage;
 using MongoDB.Driver;
+using MongoDB.Bson;
 
 namespace Hangfire.Mongo
 {
@@ -128,7 +129,7 @@ namespace Hangfire.Mongo
 
             Database.JobParameter
                 .UpdateMany(
-                    Builders<JobParameterDto>.Filter.Eq(_ => _.JobId, int.Parse(id)) &
+                    Builders<JobParameterDto>.Filter.Eq(_ => _.JobId, new ObjectId(id)) &
                     Builders<JobParameterDto>.Filter.Eq(_ => _.Name, name),
                     Builders<JobParameterDto>.Update.Set(_ => _.Value, value),
                     new UpdateOptions
@@ -146,7 +147,7 @@ namespace Hangfire.Mongo
                 throw new ArgumentNullException(nameof(name));
 
             var jobParameter = Database.JobParameter
-                .Find(Builders<JobParameterDto>.Filter.Eq(_ => _.JobId, int.Parse(id)) &
+                .Find(Builders<JobParameterDto>.Filter.Eq(_ => _.JobId, new ObjectId(id)) &
                       Builders<JobParameterDto>.Filter.Eq(_ => _.Name, name)).FirstOrDefault();
 
             return jobParameter?.Value;
@@ -159,7 +160,7 @@ namespace Hangfire.Mongo
 
             var jobData = Database
                 .Job
-                .Find(Builders<JobDto>.Filter.Eq(_ => _.Id, int.Parse(jobId)))
+                .Find(Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(jobId)))
                 .FirstOrDefault();
 
             if (jobData == null)
@@ -197,7 +198,7 @@ namespace Hangfire.Mongo
 
             var job = Database
                 .Job
-                .Find(Builders<JobDto>.Filter.Eq(_ => _.Id, int.Parse(jobId)))
+                .Find(Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(jobId)))
                 .FirstOrDefault();
 
             if (job == null)

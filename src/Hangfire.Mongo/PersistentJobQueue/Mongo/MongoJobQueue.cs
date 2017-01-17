@@ -7,6 +7,7 @@ using Hangfire.Mongo.Dto;
 using Hangfire.Mongo.MongoUtils;
 using Hangfire.Storage;
 using MongoDB.Driver;
+using MongoDB.Bson;
 
 namespace Hangfire.Mongo.PersistentJobQueue.Mongo
 {
@@ -82,7 +83,7 @@ namespace Hangfire.Mongo.PersistentJobQueue.Mongo
             }
             while (fetchedJob == null);
 
-            return new MongoFetchedJob(_connection, fetchedJob.Id, fetchedJob.JobId.ToString(CultureInfo.InvariantCulture), fetchedJob.Queue);
+            return new MongoFetchedJob(_connection, fetchedJob.Id, fetchedJob.JobId.ToString(), fetchedJob.Queue);
         }
 
         public void Enqueue(string queue, string jobId)
@@ -91,7 +92,7 @@ namespace Hangfire.Mongo.PersistentJobQueue.Mongo
                 .JobQueue
                 .InsertOne(new JobQueueDto
                 {
-                    JobId = int.Parse(jobId),
+                    JobId = new ObjectId(jobId),
                     Queue = queue
                 });
         }

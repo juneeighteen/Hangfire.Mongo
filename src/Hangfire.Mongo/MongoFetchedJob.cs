@@ -3,6 +3,7 @@ using Hangfire.Mongo.Database;
 using Hangfire.Mongo.Dto;
 using Hangfire.Storage;
 using MongoDB.Driver;
+using MongoDB.Bson;
 
 namespace Hangfire.Mongo
 {
@@ -26,7 +27,7 @@ namespace Hangfire.Mongo
         /// <param name="id">Identifier</param>
         /// <param name="jobId">Job ID</param>
         /// <param name="queue">Queue name</param>
-        public MongoFetchedJob(HangfireDbContext connection, int id, string jobId, string queue)
+        public MongoFetchedJob(HangfireDbContext connection, ObjectId id, string jobId, string queue)
         {
             if (connection == null) throw new ArgumentNullException(nameof(connection));
             if (jobId == null) throw new ArgumentNullException(nameof(jobId));
@@ -43,7 +44,7 @@ namespace Hangfire.Mongo
         /// <summary>
         /// Identifier
         /// </summary>
-        public int Id { get; private set; }
+        public ObjectId Id { get; private set; }
 
         /// <summary>
         /// Job ID

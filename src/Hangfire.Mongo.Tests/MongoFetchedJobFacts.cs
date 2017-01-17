@@ -24,7 +24,7 @@ namespace Hangfire.Mongo.Tests
             UseConnection(connection =>
             {
                 var exception = Assert.Throws<ArgumentNullException>(
-                    () => new MongoFetchedJob(null, 1, JobId, Queue));
+                    () => new MongoFetchedJob(null, ObjectId.GenerateNewId(), JobId, Queue));
 
                 Assert.Equal("connection", exception.ParamName);
             });
@@ -35,7 +35,7 @@ namespace Hangfire.Mongo.Tests
         {
             UseConnection(connection =>
             {
-                var exception = Assert.Throws<ArgumentNullException>(() => new MongoFetchedJob(connection, 1, null, Queue));
+                var exception = Assert.Throws<ArgumentNullException>(() => new MongoFetchedJob(connection, ObjectId.GenerateNewId(), null, Queue));
 
                 Assert.Equal("jobId", exception.ParamName);
             });
@@ -47,7 +47,7 @@ namespace Hangfire.Mongo.Tests
             UseConnection(connection =>
             {
                 var exception = Assert.Throws<ArgumentNullException>(
-                    () => new MongoFetchedJob(connection, 1, JobId, null));
+                    () => new MongoFetchedJob(connection, ObjectId.GenerateNewId(), JobId, null));
 
                 Assert.Equal("queue", exception.ParamName);
             });
@@ -58,9 +58,10 @@ namespace Hangfire.Mongo.Tests
         {
             UseConnection(connection =>
             {
-                var fetchedJob = new MongoFetchedJob(connection, 1, JobId, Queue);
+                var id = ObjectId.GenerateNewId();
+                var fetchedJob = new MongoFetchedJob(connection, id, JobId, Queue);
 
-                Assert.Equal(1, fetchedJob.Id);
+                Assert.Equal(id, fetchedJob.Id);
                 Assert.Equal(JobId, fetchedJob.JobId);
                 Assert.Equal(Queue, fetchedJob.Queue);
             });
@@ -72,8 +73,8 @@ namespace Hangfire.Mongo.Tests
             UseConnection(connection =>
             {
                 // Arrange
-                var id = CreateJobQueueRecord(connection, "1", "default");
-                var processingJob = new MongoFetchedJob(connection, id, "1", "default");
+                var id = CreateJobQueueRecord(connection, ObjectId.GenerateNewId().ToString(), "default");
+                var processingJob = new MongoFetchedJob(connection, id, ObjectId.GenerateNewId().ToString(), "default");
 
                 // Act
                 processingJob.RemoveFromQueue();
@@ -89,12 +90,14 @@ namespace Hangfire.Mongo.Tests
         {
             UseConnection(connection =>
             {
+                var job1 = ObjectId.GenerateNewId().ToString();
+                var job2 = ObjectId.GenerateNewId().ToString();
                 // Arrange
-                CreateJobQueueRecord(connection, "1", "default");
-                CreateJobQueueRecord(connection, "1", "critical");
-                CreateJobQueueRecord(connection, "2", "default");
+                CreateJobQueueRecord(connection, job1, "default");
+                CreateJobQueueRecord(connection, job1, "critical");
+                CreateJobQueueRecord(connection, job2, "default");
 
-                var fetchedJob = new MongoFetchedJob(connection, 999, "1", "default");
+                var fetchedJob = new MongoFetchedJob(connection, ObjectId.GenerateNewId(), ObjectId.GenerateNewId().ToString(), "default");
 
                 // Act
                 fetchedJob.RemoveFromQueue();
@@ -111,8 +114,8 @@ namespace Hangfire.Mongo.Tests
             UseConnection(connection =>
             {
                 // Arrange
-                var id = CreateJobQueueRecord(connection, "1", "default");
-                var processingJob = new MongoFetchedJob(connection, id, "1", "default");
+                var id = CreateJobQueueRecord(connection, ObjectId.GenerateNewId().ToString(), "default");
+                var processingJob = new MongoFetchedJob(connection, id, ObjectId.GenerateNewId().ToString(), "default");
 
                 // Act
                 processingJob.Requeue();
@@ -129,8 +132,8 @@ namespace Hangfire.Mongo.Tests
             UseConnection(connection =>
             {
                 // Arrange
-                var id = CreateJobQueueRecord(connection, "1", "default");
-                var processingJob = new MongoFetchedJob(connection, id, "1", "default");
+                var id = CreateJobQueueRecord(connection, ObjectId.GenerateNewId().ToString(), "default");
+                var processingJob = new MongoFetchedJob(connection, id, ObjectId.GenerateNewId().ToString(), "default");
 
                 // Act
                 processingJob.Dispose();
@@ -141,11 +144,11 @@ namespace Hangfire.Mongo.Tests
             });
         }
 
-        private static int CreateJobQueueRecord(HangfireDbContext connection, string jobId, string queue)
+        private static ObjectId CreateJobQueueRecord(HangfireDbContext connection, string jobId, string queue)
         {
             var jobQueue = new JobQueueDto
             {
-                JobId = int.Parse(jobId),
+                JobId = new ObjectId(jobId),
                 Queue = queue,
                 FetchedAt = connection.GetServerTimeUtc()
             };

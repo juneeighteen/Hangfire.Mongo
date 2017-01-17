@@ -84,7 +84,7 @@ namespace Hangfire.Mongo
         }
 
         /// <summary>
-        /// Cleint identifier
+        /// CleObjectId identifier
         /// </summary>
         public string ClientId { get; private set; }
 

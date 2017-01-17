@@ -39,13 +39,13 @@ namespace Hangfire.Mongo
 
         public override void ExpireJob(string jobId, TimeSpan expireIn)
         {
-            QueueCommand(x => x.Job.UpdateMany(Builders<JobDto>.Filter.Eq(_ => _.Id, int.Parse(jobId)),
+            QueueCommand(x => x.Job.UpdateMany(Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(jobId)),
                 Builders<JobDto>.Update.Set(_ => _.ExpireAt, _connection.GetServerTimeUtc().Add(expireIn))));
         }
 
         public override void PersistJob(string jobId)
         {
-            QueueCommand(x => x.Job.UpdateMany(Builders<JobDto>.Filter.Eq(_ => _.Id, int.Parse(jobId)),
+            QueueCommand(x => x.Job.UpdateMany(Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(jobId)),
                 Builders<JobDto>.Update.Set(_ => _.ExpireAt, null)));
         }
 
@@ -56,7 +56,7 @@ namespace Hangfire.Mongo
                 StateDto stateDto = new StateDto
                 {
                     Id = ObjectId.GenerateNewId(),
-                    JobId = int.Parse(jobId),
+                    JobId = new ObjectId(jobId),
                     Name = state.Name,
                     Reason = state.Reason,
                     CreatedAt = _connection.GetServerTimeUtc(),
@@ -65,10 +65,10 @@ namespace Hangfire.Mongo
                 x.State.InsertOne(stateDto);
 
                 x.Job.UpdateMany(
-                    Builders<JobDto>.Filter.Eq(_ => _.Id, int.Parse(jobId)),
+                    Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(jobId)),
                     Builders<JobDto>.Update.Set(_ => _.StateId, stateDto.Id));
 
-                x.Job.UpdateMany(Builders<JobDto>.Filter.Eq(_ => _.Id, int.Parse(jobId)),
+                x.Job.UpdateMany(Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(jobId)),
                     Builders<JobDto>.Update.Set(_ => _.StateName, state.Name));
             });
         }
@@ -78,7 +78,7 @@ namespace Hangfire.Mongo
             QueueCommand(x => x.State.InsertOne(new StateDto
             {
                 Id = ObjectId.GenerateNewId(),
-                JobId = int.Parse(jobId),
+                JobId = new ObjectId(jobId),
                 Name = state.Name,
                 Reason = state.Reason,
                 CreatedAt = _connection.GetServerTimeUtc(),

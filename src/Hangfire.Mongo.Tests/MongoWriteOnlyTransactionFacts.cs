@@ -52,7 +52,7 @@ namespace Hangfire.Mongo.Tests
             {
                 JobDto job = new JobDto
                 {
-                    Id = 1,
+                    Id = ObjectId.GenerateNewId(),
                     InvocationData = "",
                     Arguments = "",
                     CreatedAt = database.GetServerTimeUtc()
@@ -61,7 +61,7 @@ namespace Hangfire.Mongo.Tests
 
                 JobDto anotherJob = new JobDto
                 {
-                    Id = 2,
+                    Id = ObjectId.GenerateNewId(),
                     InvocationData = "",
                     Arguments = "",
                     CreatedAt = database.GetServerTimeUtc()
@@ -88,7 +88,7 @@ namespace Hangfire.Mongo.Tests
             {
                 JobDto job = new JobDto
                 {
-                    Id = 1,
+                    Id = ObjectId.GenerateNewId(),
                     InvocationData = "",
                     Arguments = "",
                     CreatedAt = database.GetServerTimeUtc(),
@@ -98,7 +98,7 @@ namespace Hangfire.Mongo.Tests
 
                 JobDto anotherJob = new JobDto
                 {
-                    Id = 2,
+                    Id = ObjectId.GenerateNewId(),
                     InvocationData = "",
                     Arguments = "",
                     CreatedAt = database.GetServerTimeUtc(),
@@ -126,7 +126,7 @@ namespace Hangfire.Mongo.Tests
             {
                 JobDto job = new JobDto
                 {
-                    Id = 1,
+                    Id = ObjectId.GenerateNewId(),
                     InvocationData = "",
                     Arguments = "",
                     CreatedAt = database.GetServerTimeUtc()
@@ -135,7 +135,7 @@ namespace Hangfire.Mongo.Tests
 
                 JobDto anotherJob = new JobDto
                 {
-                    Id = 2,
+                    Id = ObjectId.GenerateNewId(),
                     InvocationData = "",
                     Arguments = "",
                     CreatedAt = database.GetServerTimeUtc()
@@ -177,7 +177,7 @@ namespace Hangfire.Mongo.Tests
             {
                 JobDto job = new JobDto
                 {
-                    Id = 1,
+                    Id = ObjectId.GenerateNewId(),
                     InvocationData = "",
                     Arguments = "",
                     CreatedAt = database.GetServerTimeUtc()
@@ -891,7 +891,7 @@ namespace Hangfire.Mongo.Tests
         }
 
 
-        private static dynamic GetTestJob(HangfireDbContext database, int jobId)
+        private static dynamic GetTestJob(HangfireDbContext database, ObjectId jobId)
         {
             return database.Job.Find(Builders<JobDto>.Filter.Eq(_ => _.Id, jobId)).FirstOrDefault();
         }

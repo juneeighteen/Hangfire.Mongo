@@ -100,7 +100,7 @@ namespace Hangfire.Mongo.Tests
             {
                 var jobQueue = new JobQueueDto
                 {
-                    JobId = 1,
+                    JobId = ObjectId.GenerateNewId(),
                     Queue = "default"
                 };
 
@@ -114,7 +114,7 @@ namespace Hangfire.Mongo.Tests
 
                 // Assert
                 Assert.Equal(id, payload.Id);
-                Assert.Equal("1", payload.JobId);
+                Assert.Equal(jobQueue.JobId.ToString(), payload.JobId);
                 Assert.Equal("default", payload.Queue);
             });
         }
@@ -148,7 +148,7 @@ namespace Hangfire.Mongo.Tests
                 // Assert
                 Assert.NotNull(payload);
 
-                var fetchedAt = connection.JobQueue.Find(Builders<JobQueueDto>.Filter.Eq(_ => _.JobId, int.Parse(payload.JobId))).FirstOrDefault().FetchedAt;
+                var fetchedAt = connection.JobQueue.Find(Builders<JobQueueDto>.Filter.Eq(_ => _.JobId, new ObjectId(payload.JobId))).FirstOrDefault().FetchedAt;
 
                 Assert.NotNull(fetchedAt);
                 Assert.True(fetchedAt > DateTime.UtcNow.AddMinutes(-1));
@@ -227,7 +227,7 @@ namespace Hangfire.Mongo.Tests
                 var payload = queue.Dequeue(DefaultQueues, CreateTimingOutCancellationToken());
 
                 // Assert
-                var otherJobFetchedAt = connection.JobQueue.Find(Builders<JobQueueDto>.Filter.Ne(_ => _.JobId, int.Parse(payload.JobId))).FirstOrDefault().FetchedAt;
+                var otherJobFetchedAt = connection.JobQueue.Find(Builders<JobQueueDto>.Filter.Ne(_ => _.JobId, new ObjectId(payload.JobId))).FirstOrDefault().FetchedAt;
 
                 Assert.Null(otherJobFetchedAt);
             });
@@ -316,11 +316,11 @@ namespace Hangfire.Mongo.Tests
             UseConnection(connection =>
             {
                 var queue = CreateJobQueue(connection);
-
-                queue.Enqueue("default", "1");
+                var id = ObjectId.GenerateNewId().ToString();
+                queue.Enqueue("default", id);
 
                 var record = connection.JobQueue.Find(new BsonDocument()).ToList().Single();
-                Assert.Equal("1", record.JobId.ToString());
+                Assert.Equal(id, record.JobId.ToString());
                 Assert.Equal("default", record.Queue);
                 Assert.Null(record.FetchedAt);
             });

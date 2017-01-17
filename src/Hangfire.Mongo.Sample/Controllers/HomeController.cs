@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MongoDB.Bson;
+using System;
 using System.Diagnostics;
 using System.Web.Mvc;
 
@@ -11,9 +12,9 @@ namespace Hangfire.Mongo.Sample.Controllers
             return View();
         }
 
-        public ActionResult FireAndForget(int id)
+        public ActionResult FireAndForget(ObjectId id)
         {
-            for (int i = 0; i < id; i++)
+            for (int i = 0; i < 10; i++)
             {
                 BackgroundJob.Enqueue(() => Debug.WriteLine("Hangfire fire-and-forget task started."));
             }
@@ -21,9 +22,9 @@ namespace Hangfire.Mongo.Sample.Controllers
             return RedirectToAction("Index");
         }
 
-        public ActionResult Delayed(int id)
+        public ActionResult Delayed(ObjectId id)
         {
-            for (int i = 0; i < id; i++)
+            for (int i = 0; i < 10; i++)
             {
                 BackgroundJob.Schedule(() => Debug.WriteLine("Hangfire delayed task started!"), TimeSpan.FromMinutes(1));
             }

@@ -1,16 +1,17 @@
 ﻿using System;
 using Hangfire.Mongo.MongoUtils;
 using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
 
 namespace Hangfire.Mongo.Dto
 {
 #pragma warning disable 1591
     public class JobQueueDto
     {
-        [BsonId(IdGenerator = typeof(AutoIncrementIntIdGenerator))]
-        public int Id { get; set; }
+        [BsonId()]
+        public ObjectId Id { get; set; }
 
-        public int JobId { get; set; }
+        public ObjectId JobId { get; set; }
 
         public string Queue { get; set; }
 

@@ -72,9 +72,6 @@
     <Compile Include="MongoMonitoringApi.cs" />
     <Compile Include="MongoStorage.cs" />
     <Compile Include="MongoStorageOptions.cs" />
-    <Compile Include="MongoUtils\AutoIncrementIdGenerator.cs" />
-    <Compile Include="MongoUtils\AutoIncrementIntIdGenerator.cs" />
-    <Compile Include="MongoUtils\AutoIncrementLongIdGenerator.cs" />
     <Compile Include="MongoUtils\MongoExtensions.cs" />
     <Compile Include="MongoWriteOnlyTransaction.cs" />
     <Compile Include="PersistentJobQueue\EnqueuedAndFetchedCountDto.cs" />

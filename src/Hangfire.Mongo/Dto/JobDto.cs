@@ -8,8 +8,8 @@ namespace Hangfire.Mongo.Dto
 #pragma warning disable 1591
     public class JobDto
     {
-        [BsonId(IdGenerator = typeof(AutoIncrementIntIdGenerator))]
-        public int Id { get; set; }
+        [BsonId()]
+        public ObjectId Id { get; set; }
 
         public ObjectId StateId { get; set; }
 

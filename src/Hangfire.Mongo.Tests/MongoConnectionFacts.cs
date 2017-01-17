@@ -166,7 +166,7 @@ namespace Hangfire.Mongo.Tests
                 Assert.True(createdAt.AddDays(1).AddMinutes(-1) < databaseJob.ExpireAt);
                 Assert.True(databaseJob.ExpireAt < createdAt.AddDays(1).AddMinutes(1));
 
-                var parameters = database.JobParameter.Find(Builders<JobParameterDto>.Filter.Eq(_ => _.JobId, int.Parse(jobId))).ToList()
+                var parameters = database.JobParameter.Find(Builders<JobParameterDto>.Filter.Eq(_ => _.JobId, new ObjectId(jobId))).ToList()
                     .ToDictionary(x => x.Name, x => x.Value);
 
                 Assert.Equal("Value1", parameters["Key1"]);
@@ -186,7 +186,7 @@ namespace Hangfire.Mongo.Tests
         {
             UseConnection((database, connection) =>
             {
-                var result = connection.GetJobData("547527");
+                var result = connection.GetJobData(ObjectId.GenerateNewId().ToString());
                 Assert.Null(result);
             });
         }
@@ -200,7 +200,6 @@ namespace Hangfire.Mongo.Tests
 
                 var jobDto = new JobDto
                 {
-                    Id = 1,
                     InvocationData = JobHelper.ToJson(InvocationData.Serialize(job)),
                     Arguments = "['Arguments']",
                     StateName = "Succeeded",
@@ -233,7 +232,7 @@ namespace Hangfire.Mongo.Tests
         {
             UseConnection((database, connection) =>
             {
-                var result = connection.GetStateData("547527");
+                var result = connection.GetStateData(ObjectId.GenerateNewId().ToString());
                 Assert.Null(result);
             });
         }
@@ -250,7 +249,6 @@ namespace Hangfire.Mongo.Tests
 
                 var jobDto = new JobDto
                 {
-                    Id = 1,
                     InvocationData = "",
                     Arguments = "",
                     StateName = "",
@@ -298,7 +296,6 @@ namespace Hangfire.Mongo.Tests
             {
                 var jobDto = new JobDto
                 {
-                    Id = 1,
                     InvocationData = JobHelper.ToJson(new InvocationData(null, null, null, null)),
                     Arguments = "['Arguments']",
                     StateName = "Succeeded",
@@ -344,7 +341,6 @@ namespace Hangfire.Mongo.Tests
             {
                 var jobDto = new JobDto
                 {
-                    Id = 1,
                     InvocationData = "",
                     Arguments = "",
                     CreatedAt = database.GetServerTimeUtc()
@@ -354,7 +350,7 @@ namespace Hangfire.Mongo.Tests
 
                 connection.SetJobParameter(jobId, "Name", "Value");
 
-                var parameter = database.JobParameter.Find(Builders<JobParameterDto>.Filter.Eq(_ => _.JobId, int.Parse(jobId)) &
+                var parameter = database.JobParameter.Find(Builders<JobParameterDto>.Filter.Eq(_ => _.JobId, new ObjectId(jobId)) &
                     Builders<JobParameterDto>.Filter.Eq(_ => _.Name, "Name")).FirstOrDefault();
 
                 Assert.Equal("Value", parameter.Value);
@@ -368,7 +364,6 @@ namespace Hangfire.Mongo.Tests
             {
                 var jobDto = new JobDto
                 {
-                    Id = 1,
                     InvocationData = "",
                     Arguments = "",
                     CreatedAt = database.GetServerTimeUtc()
@@ -379,7 +374,7 @@ namespace Hangfire.Mongo.Tests
                 connection.SetJobParameter(jobId, "Name", "Value");
                 connection.SetJobParameter(jobId, "Name", "AnotherValue");
 
-                var parameter = database.JobParameter.Find(Builders<JobParameterDto>.Filter.Eq(_ => _.JobId, int.Parse(jobId)) &
+                var parameter = database.JobParameter.Find(Builders<JobParameterDto>.Filter.Eq(_ => _.JobId, new ObjectId(jobId)) &
                     Builders<JobParameterDto>.Filter.Eq(_ => _.Name, "Name")).FirstOrDefault();
 
                 Assert.Equal("AnotherValue", parameter.Value);
@@ -393,7 +388,6 @@ namespace Hangfire.Mongo.Tests
             {
                 var jobDto = new JobDto
                 {
-                    Id = 1,
                     InvocationData = "",
                     Arguments = "",
                     CreatedAt = database.GetServerTimeUtc()
@@ -403,7 +397,7 @@ namespace Hangfire.Mongo.Tests
 
                 connection.SetJobParameter(jobId, "Name", null);
 
-                var parameter = database.JobParameter.Find(Builders<JobParameterDto>.Filter.Eq(_ => _.JobId, int.Parse(jobId)) &
+                var parameter = database.JobParameter.Find(Builders<JobParameterDto>.Filter.Eq(_ => _.JobId, new ObjectId(jobId)) &
                     Builders<JobParameterDto>.Filter.Eq(_ => _.Name, "Name")).FirstOrDefault();
 
                 Assert.Equal(null, parameter.Value);
@@ -439,7 +433,7 @@ namespace Hangfire.Mongo.Tests
         {
             UseConnection((database, connection) =>
             {
-                var value = connection.GetJobParameter("1", "hello");
+                var value = connection.GetJobParameter(ObjectId.GenerateNewId().ToString(), "hello");
                 Assert.Null(value);
             });
         }
@@ -451,7 +445,6 @@ namespace Hangfire.Mongo.Tests
             {
                 var jobDto = new JobDto
                 {
-                    Id = 1,
                     InvocationData = "",
                     Arguments = "",
                     CreatedAt = database.GetServerTimeUtc()
@@ -462,7 +455,7 @@ namespace Hangfire.Mongo.Tests
                 database.JobParameter.InsertOne(new JobParameterDto
                 {
                     Id = ObjectId.GenerateNewId(),
-                    JobId = int.Parse(jobId),
+                    JobId = new ObjectId(jobId),
                     Name = "name",
                     Value = "value"
                 });

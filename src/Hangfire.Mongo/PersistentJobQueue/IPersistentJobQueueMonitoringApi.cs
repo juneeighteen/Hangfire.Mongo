@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using MongoDB.Bson;
+using System.Collections.Generic;
 
 namespace Hangfire.Mongo.PersistentJobQueue
 {
@@ -7,9 +8,9 @@ namespace Hangfire.Mongo.PersistentJobQueue
     {
         IEnumerable<string> GetQueues();
 
-        IEnumerable<int> GetEnqueuedJobIds(string queue, int from, int perPage);
+        IEnumerable<ObjectId> GetEnqueuedJobIds(string queue, int from, int perPage);
 
-        IEnumerable<int> GetFetchedJobIds(string queue, int from, int perPage);
+        IEnumerable<ObjectId> GetFetchedJobIds(string queue, int from, int perPage);
 
         EnqueuedAndFetchedCountDto GetEnqueuedAndFetchedCount(string queue);
     }
