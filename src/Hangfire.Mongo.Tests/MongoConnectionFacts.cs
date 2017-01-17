@@ -167,8 +167,7 @@ namespace Hangfire.Mongo.Tests
                 Assert.True(databaseJob.ExpireAt < createdAt.AddDays(1).AddMinutes(1));
 
                 var parameters = database.Job.Find(Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(jobId))).ToList()
-                    .SelectMany(x => x.Parameters)
-                    .ToDictionary(_ => _.Name, _ => _.Value);
+                    .FirstOrDefault().Parameters;
 
                 Assert.Equal("Value1", parameters["Key1"]);
                 Assert.Equal("Value2", parameters["Key2"]);
@@ -352,9 +351,9 @@ namespace Hangfire.Mongo.Tests
                 connection.SetJobParameter(jobId, "Name", "Value");
 
                 var parameter = database.Job.Find(Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(jobId)))
-                                        .First().Parameters.FirstOrDefault(x => x.Name == "Name");
+                                        .First().Parameters["Name"];
 
-                Assert.Equal("Value", parameter.Value);
+                Assert.Equal("Value", parameter);
             });
         }
 
@@ -376,10 +375,9 @@ namespace Hangfire.Mongo.Tests
                 connection.SetJobParameter(jobId, "Name", "AnotherValue");
 
                 var parameter = database.Job.Find(Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(jobId)))
-                                        .First().Parameters.
-                                        FirstOrDefault(x => x.Name == "Name");
+                                        .First().Parameters["Name"];
 
-                Assert.Equal("AnotherValue", parameter.Value);
+                Assert.Equal("AnotherValue", parameter);
             });
         }
 
@@ -450,13 +448,9 @@ namespace Hangfire.Mongo.Tests
                     InvocationData = "",
                     Arguments = "",
                     CreatedAt = database.GetServerTimeUtc(),
-                    Parameters = new List<JobParameterDto>()
+                    Parameters = new Dictionary<string, string>()
                     {
-                        new JobParameterDto
-                        {
-                            Name = "name",
-                            Value = "value"
-                        }
+                        {  "name", "value" } 
                     }
                 };
                 database.Job.InsertOne(jobDto);

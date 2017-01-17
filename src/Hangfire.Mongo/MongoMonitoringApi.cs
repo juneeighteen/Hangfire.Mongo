@@ -92,11 +92,9 @@ namespace Hangfire.Mongo
                 if (job == null)
                     return null;
 
-                Dictionary<string, string> parameters = connection.Job
-                    .Find(Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(jobId)))
-                    .ToList()
-                    .SelectMany(x => x.Parameters)
-                    .ToDictionary(_ => _.Name, _ => _.Value);
+                IDictionary<string, string> parameters = connection.Job
+                    .AsQueryable().Where(x => x.Id == new ObjectId(jobId))
+                    .FirstOrDefault().Parameters;
 
                 List<StateHistoryDto> history = connection.State
                     .Find(Builders<StateDto>.Filter.Eq(_ => _.JobId, new ObjectId(jobId)))

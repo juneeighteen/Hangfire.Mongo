@@ -77,12 +77,7 @@ namespace Hangfire.Mongo
                 Arguments = invocationData.Arguments,
                 CreatedAt = createdAt,
                 ExpireAt = createdAt.Add(expireIn),
-                Parameters = parameters?.Select(parameter =>
-                        new JobParameterDto
-                        {
-                            Name = parameter.Key,
-                            Value = parameter.Value
-                        }).ToList() ?? new List<JobParameterDto>()
+                Parameters = parameters
             };
 
             Database.Job.InsertOne(jobDto);
@@ -119,22 +114,9 @@ namespace Hangfire.Mongo
             if (name == null)
                 throw new ArgumentNullException(nameof(name));
 
-            var filter = Builders<JobDto>.Filter.Where(x => x.Id == new ObjectId(id) && x.Parameters.Any(i => i.Name == name));
-            var update = Builders<JobDto>.Update.Set(x => x.Parameters[-1].Value, value);
+            var filter = Builders<JobDto>.Filter.Where(x => x.Id == new ObjectId(id));
+            var update = Builders<JobDto>.Update.Set(x => x.Parameters[name], value);
             var result = Database.Job.UpdateMany(filter, update);
-            if (result.MatchedCount == 0)
-            {
-                filter = Builders<JobDto>.Filter.Where(x => x.Id == new ObjectId(id));
-                var addToSet = Builders<JobDto>.Update.AddToSet(
-                    _ => _.Parameters,
-                    new JobParameterDto
-                    {
-                        Name = name,
-                        Value = value
-                    }
-                );
-                result = Database.Job.UpdateMany(filter, addToSet);
-            }
         }
 
         public override string GetJobParameter(string id, string name)
@@ -146,11 +128,11 @@ namespace Hangfire.Mongo
                 throw new ArgumentNullException(nameof(name));
 
             var jobParameter = Database.Job.AsQueryable()
-                .Where(_ => _.Id == new ObjectId(id))
-                .SelectMany(_ => _.Parameters)
-                .FirstOrDefault(_ => _.Name == name);
+                .Where(_ => _.Id == new ObjectId(id) && _.Parameters[name] != null)
+                .Select(_ => _.Parameters[name])
+                .FirstOrDefault();
 
-            return jobParameter?.Value;
+            return jobParameter;
         }
 
         public override JobData GetJobData(string jobId)

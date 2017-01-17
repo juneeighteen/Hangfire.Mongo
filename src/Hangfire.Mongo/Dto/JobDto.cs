@@ -11,7 +11,7 @@ namespace Hangfire.Mongo.Dto
     {
         public JobDto()
         {
-            Parameters = new List<JobParameterDto>();
+            Parameters = new Dictionary<string, string>();
         }
 
         [BsonId()]
@@ -29,7 +29,7 @@ namespace Hangfire.Mongo.Dto
 
         public DateTime? ExpireAt { get; set; }
 
-        public List<JobParameterDto> Parameters { get; set;  }
+        public IDictionary<string, string> Parameters { get; set;  }
     }
 #pragma warning restore 1591
 }
