@@ -43,7 +43,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CountersAggregatorFacts.cs" />
-    <Compile Include="ExpirationManagerFacts.cs" />
     <Compile Include="MongoConnectionFacts.cs" />
     <Compile Include="MongoDistributedLockFacts.cs" />
     <Compile Include="MongoFetchedJobFacts.cs" />
