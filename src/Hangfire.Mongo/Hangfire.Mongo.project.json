@@ -1,6 +1,6 @@
 ﻿{
   "dependencies": {
-    "HangFire.Core": "1.6.8",
+    "Hangfire.Core": "1.6.8",
     "MongoDB.Driver": "2.4.1"
   },
   "buildOptions": {
@@ -11,7 +11,7 @@
     "xmlDoc": true
   },
   "runtimes": {
-    "win10-x64": {}
+    "win": {}
   },
   "frameworks": {
     "net45": {}
