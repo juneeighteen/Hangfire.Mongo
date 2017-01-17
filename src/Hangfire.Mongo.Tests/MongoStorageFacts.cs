@@ -60,7 +60,7 @@ namespace Hangfire.Mongo.Tests
             var components = storage.GetComponents();
 
             Type[] componentTypes = components.Select(_ => _.GetType()).ToArray();
-            Assert.Contains(typeof(ExpirationManager), componentTypes);
+            Assert.Contains(typeof(CountersAggregator), componentTypes);
         }
 
         private static MongoStorage CreateStorage()

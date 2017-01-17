@@ -159,6 +159,19 @@ namespace Hangfire.Mongo.Database
             // Create for jobid on state, jobParameter, jobQueue
             State.CreateDescendingIndex(p => p.JobId);
             JobQueue.CreateDescendingIndex(p => p.JobId);
+            CreateTTLIndexes();
+        }
+
+        private void CreateTTLIndexes()
+        {
+            //create ttl indexes to avoid polling 
+            var indexOption = new CreateIndexOptions() { ExpireAfter = TimeSpan.FromSeconds(0) };
+            AggregatedCounter.Indexes.CreateOne(Builders<AggregatedCounterDto>.IndexKeys.Ascending(_ => _.ExpireAt), indexOption);
+            Counter.Indexes.CreateOne(Builders<CounterDto>.IndexKeys.Ascending(_ => _.ExpireAt), indexOption);
+            Job.Indexes.CreateOne(Builders<JobDto>.IndexKeys.Ascending(_ => _.ExpireAt), indexOption);
+            List.Indexes.CreateOne(Builders<ListDto>.IndexKeys.Ascending(_ => _.ExpireAt), indexOption);
+            Set.Indexes.CreateOne(Builders<SetDto>.IndexKeys.Ascending(_ => _.ExpireAt), indexOption);
+            Hash.Indexes.CreateOne(Builders<HashDto>.IndexKeys.Ascending(_ => _.ExpireAt), indexOption);
         }
 
 

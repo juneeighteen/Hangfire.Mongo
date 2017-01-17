@@ -20,9 +20,7 @@ namespace Hangfire.Mongo
             QueuePollInterval = TimeSpan.FromSeconds(15);
             InvisibilityTimeout = TimeSpan.FromMinutes(30);
             DistributedLockLifetime = TimeSpan.FromSeconds(30);
-            JobExpirationCheckInterval = TimeSpan.FromHours(1);
             CountersAggregateInterval = TimeSpan.FromMinutes(5);
-
 
             ClientId = Guid.NewGuid().ToString().Replace("-", string.Empty);
         }
@@ -87,11 +85,6 @@ namespace Hangfire.Mongo
         /// CleObjectId identifier
         /// </summary>
         public string ClientId { get; private set; }
-
-        /// <summary>
-        /// Expiration check inteval for jobs
-        /// </summary>
-        public TimeSpan JobExpirationCheckInterval { get; set; }
 
         /// <summary>
         /// Counters interval
