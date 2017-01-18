@@ -35,7 +35,7 @@ namespace Hangfire.Mongo.MongoUtils
 
                 //diff between server and client
                 var clientTime = DateTime.UtcNow;
-                ClientServerTimeDiff = LastSync.Value - clientTime;
+                ClientServerTimeDiff = result - clientTime;
                 LastSync = clientTime;
                 return result;
             }
