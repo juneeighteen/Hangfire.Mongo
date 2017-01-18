@@ -12,7 +12,7 @@ namespace Hangfire.Mongo.Database
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
     public class HangfireDbContext : IDisposable
     {
-        private const int RequiredSchemaVersion = 6;
+        private const int RequiredSchemaVersion = 7;
 
         private readonly string _prefix;
 

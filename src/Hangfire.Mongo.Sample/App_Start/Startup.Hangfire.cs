@@ -1,4 +1,5 @@
 ﻿using Owin;
+using System;
 
 namespace Hangfire.Mongo.Sample
 {
@@ -6,7 +7,7 @@ namespace Hangfire.Mongo.Sample
     {
         public void ConfigureHangfire(IAppBuilder app)
         {
-            GlobalConfiguration.Configuration.UseMongoStorage("mongodb://localhost", "hangfire-mongo-sample");
+            GlobalConfiguration.Configuration.UseMongoStorage("mongodb://localhost", "hangfire-mongo-sample", new MongoStorageOptions() { QueuePollInterval = TimeSpan.FromSeconds(1) });
             //GlobalConfiguration.Configuration.UseMongoStorage(new MongoClientSettings()
             //{
             //    // ...

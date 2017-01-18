@@ -18,6 +18,8 @@ namespace Hangfire.Mongo.MongoUtils
 
         private static DateTime? LastSync { get; set; }
 
+        private static readonly object LockTimeSync = new object();
+
         /// <summary>
         /// Retreives server time in UTC zone
         /// </summary>
@@ -25,24 +27,29 @@ namespace Hangfire.Mongo.MongoUtils
         /// <returns>Server time</returns>
         public static DateTime GetServerTimeUtc(this IMongoDatabase database)
         {
+            bool hasChanged = false;
             if (LastSync == null || LastSync.Value.AddMilliseconds(SynchronizeIntervalMs) < DateTime.UtcNow)
             {
-               var serverStatus = database.RunCommand<BsonDocument>(new BsonDocument("isMaster", 1));
-                BsonValue localTime;
-                var result = serverStatus.TryGetValue("localTime", out localTime)
-                    ? ((DateTime)localTime).ToUniversalTime()
-                    : DateTime.UtcNow;
+                lock (LockTimeSync)
+                {
+                    if (hasChanged)
+                        return GetServerTimeUtc(database);
+                    hasChanged = true;
+                    var serverStatus = database.RunCommand<BsonDocument>(new BsonDocument("isMaster", 1));
+                    BsonValue localTime;
+                    var result = serverStatus.TryGetValue("localTime", out localTime)
+                        ? ((DateTime)localTime).ToUniversalTime()
+                        : DateTime.UtcNow;
 
-                //diff between server and client
-                var clientTime = DateTime.UtcNow;
-                ClientServerTimeDiff = result - clientTime;
-                LastSync = clientTime;
-                return result;
+                    //diff between server and client
+                    var clientTime = DateTime.UtcNow;
+                    ClientServerTimeDiff = result - clientTime;
+                    LastSync = clientTime;
+                    return result;
+                }
             }
-            else
-            {
-                return DateTime.UtcNow.Add(ClientServerTimeDiff);
-            }
+
+            return DateTime.UtcNow.Add(ClientServerTimeDiff);
         }
 
         /// <summary>
