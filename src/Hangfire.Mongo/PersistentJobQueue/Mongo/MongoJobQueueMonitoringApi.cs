@@ -22,11 +22,7 @@ namespace Hangfire.Mongo.PersistentJobQueue.Mongo
 
         public IEnumerable<string> GetQueues()
         {
-            return _connection.Job.AsQueryable()
-                .Where(_ => _.Queue != null)
-                .GroupBy(_ => _.Queue)
-                .Select(g => g.Key)
-                .ToList();
+            return _connection.Job.Distinct(x => x.Queue, Builders<JobDto>.Filter.Ne(x => x.Queue, null)).ToList();
         }
 
         public IEnumerable<ObjectId> GetEnqueuedJobIds(string queue, int from, int perPage)

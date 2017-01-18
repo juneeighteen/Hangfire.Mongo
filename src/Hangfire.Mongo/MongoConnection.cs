@@ -219,7 +219,7 @@ namespace Hangfire.Mongo
 
             Database.Server.UpdateMany(Builders<ServerDto>.Filter.Eq(_ => _.Id, serverId),
                 Builders<ServerDto>.Update.Combine(Builders<ServerDto>.Update.Set(_ => _.Data, JobHelper.ToJson(data)),
-                    Builders<ServerDto>.Update.Set(_ => _.LastHeartbeat, Database.GetServerTimeUtc())),
+                    Builders<ServerDto>.Update.CurrentDate(_ => _.LastHeartbeat)),
                 new UpdateOptions { IsUpsert = true });
         }
 
@@ -237,7 +237,7 @@ namespace Hangfire.Mongo
                 throw new ArgumentNullException(nameof(serverId));
 
             Database.Server.UpdateMany(Builders<ServerDto>.Filter.Eq(_ => _.Id, serverId),
-                Builders<ServerDto>.Update.Set(_ => _.LastHeartbeat, Database.GetServerTimeUtc()));
+                Builders<ServerDto>.Update.CurrentDate(_ => _.LastHeartbeat));
         }
 
         public override int RemoveTimedOutServers(TimeSpan timeOut)
