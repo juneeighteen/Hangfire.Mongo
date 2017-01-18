@@ -105,7 +105,7 @@ namespace Hangfire.Mongo
                         CreatedAt = x.CreatedAt,
                         Reason = x.Reason,
                         Data = x.Data
-					})
+                    })
                     .ToList();
 
                 return new JobDetailsDto
@@ -318,44 +318,26 @@ namespace Hangfire.Mongo
 
         private JobList<EnqueuedJobDto> EnqueuedJobs(HangfireDbContext connection, IEnumerable<ObjectId> jobIds)
         {
-            List<JobDto> jobs = connection.Job
-                .Find(Builders<JobDto>.Filter.In(_ => _.Id, jobIds))
-                .ToList();
-
-            Dictionary<ObjectId, JobQueueDto> jobIdToJobQueueMap = connection.JobQueue
-                .Find(Builders<JobQueueDto>.Filter.In(_ => _.JobId, jobs.Select(job => job.Id))
-                      & (Builders<JobQueueDto>.Filter.Not(Builders<JobQueueDto>.Filter.Exists(_ => _.FetchedAt))
-                      | Builders<JobQueueDto>.Filter.Eq(_ => _.FetchedAt, null)))
-                .ToList().ToDictionary(kv => kv.JobId, kv => kv);
-
-            Dictionary<ObjectId, StateDto> jobIdToStateMap = connection.State
-                .Find(Builders<StateDto>.Filter.In(_ => _.Id, jobs.Select(job => job.StateId)))
-                .ToList().ToDictionary(kv => kv.JobId, kv => kv);
-
-            IEnumerable<JobDto> jobsFiltered = jobs.Where(job => jobIdToJobQueueMap.ContainsKey(job.Id));
-
-            List<JobDetailedDto> joinedJobs = jobsFiltered
-                .Select(job =>
-                {
-                    var state = jobIdToStateMap.ContainsKey(job.Id) ? jobIdToStateMap[job.Id] : null;
-                    return new JobDetailedDto
-                    {
-                        Id = job.Id,
-                        InvocationData = job.InvocationData,
-                        Arguments = job.Arguments,
-                        CreatedAt = job.CreatedAt,
-                        ExpireAt = job.ExpireAt,
-                        FetchedAt = null,
-                        StateId = job.StateId,
-                        StateName = job.StateName,
-                        StateReason = state?.Reason,
-                        StateData = state?.Data
-                    };
-                })
-                .ToList();
+            //use aggregation pipeline, enqueued and not fetched
+            var jobs = (from j in connection.Job.AsQueryable()
+                        where jobIds.Contains(j.Id) && j.Queue != null && j.FetchedAt == null
+                        join s in connection.State.AsQueryable() on j.StateId equals s.Id into joined
+                        from state in joined.DefaultIfEmpty()
+                        select new JobDetailedDto
+                        {
+                            Id = j.Id,
+                            InvocationData = j.InvocationData,
+                            Arguments = j.Arguments,
+                            CreatedAt = j.CreatedAt,
+                            ExpireAt = j.ExpireAt,
+                            StateId = j.StateId,
+                            StateName = j.StateName,
+                            StateReason = state.Reason,
+                            StateData = state.Data
+                        }).ToList();
 
             return DeserializeJobs(
-                joinedJobs,
+                jobs,
                 (sqlJob, job, stateData) => new EnqueuedJobDto
                 {
                     Job = job,
@@ -407,57 +389,33 @@ namespace Hangfire.Mongo
 
         private JobList<FetchedJobDto> FetchedJobs(HangfireDbContext connection, IEnumerable<ObjectId> jobIds)
         {
-            List<JobDto> jobs = connection.Job
-                .Find(Builders<JobDto>.Filter.In(_ => _.Id, jobIds))
-                .ToList();
+            //use aggregation pipeline, enqueued and not fetched
+            var jobs = (from j in connection.Job.AsQueryable()
+                        where jobIds.Contains(j.Id) && j.Queue != null && j.FetchedAt != null
+                        join s in connection.State.AsQueryable() on j.StateId equals s.Id into joined
+                        from state in joined.DefaultIfEmpty()
+                        select new JobDetailedDto
+                        {
+                            Id = j.Id,
+                            InvocationData = j.InvocationData,
+                            Arguments = j.Arguments,
+                            CreatedAt = j.CreatedAt,
+                            ExpireAt = j.ExpireAt,
+                            StateId = j.StateId,
+                            StateName = j.StateName,
+                            StateReason = state.Reason,
+                            StateData = state.Data
+                        }).ToList();
 
-            Dictionary<ObjectId, JobQueueDto> jobIdToJobQueueMap = connection.JobQueue
-                .Find(Builders<JobQueueDto>.Filter.In(_ => _.JobId, jobs.Select(job => job.Id))
-                      & Builders<JobQueueDto>.Filter.Exists(_ => _.FetchedAt)
-                      & Builders<JobQueueDto>.Filter.Not(Builders<JobQueueDto>.Filter.Eq(_ => _.FetchedAt, null)))
-                .ToList().ToDictionary(kv => kv.JobId, kv => kv);
-
-            Dictionary<ObjectId, StateDto> jobIdToStateMap = connection.State
-                .Find(Builders<StateDto>.Filter.In(_ => _.Id, jobs.Select(job => job.StateId)))
-                .ToList().ToDictionary(kv => kv.JobId, kv => kv);
-
-            IEnumerable<JobDto> jobsFiltered = jobs.Where(job => jobIdToJobQueueMap.ContainsKey(job.Id));
-
-            List<JobDetailedDto> joinedJobs = jobsFiltered
-                .Select(job =>
+            return DeserializeJobs(
+                jobs,
+                (sqlJob, job, stateData) => new FetchedJobDto
                 {
-                    var state = jobIdToStateMap.ContainsKey(job.Id) ? jobIdToStateMap[job.Id] : null;
-                    return new JobDetailedDto
-                    {
-                        Id = job.Id,
-                        InvocationData = job.InvocationData,
-                        Arguments = job.Arguments,
-                        CreatedAt = job.CreatedAt,
-                        ExpireAt = job.ExpireAt,
-                        FetchedAt = null,
-                        StateId = job.StateId,
-                        StateName = job.StateName,
-                        StateReason = state?.Reason,
-                        StateData = state?.Data
-                    };
-                })
-                .ToList();
+                    Job = job,
+                    State = sqlJob.StateName,
+                    FetchedAt = sqlJob.FetchedAt
+                });
 
-            var result = new List<KeyValuePair<string, FetchedJobDto>>(joinedJobs.Count);
-
-            foreach (var job in joinedJobs)
-            {
-                result.Add(new KeyValuePair<string, FetchedJobDto>(
-                    job.Id.ToString(),
-                    new FetchedJobDto
-                    {
-                        Job = DeserializeJob(job.InvocationData, job.Arguments),
-                        State = job.StateName,
-                        FetchedAt = job.FetchedAt
-                    }));
-            }
-
-            return new JobList<FetchedJobDto>(result);
         }
 
         private JobList<TDto> GetJobs<TDto>(HangfireDbContext connection, int from, int count, string stateName, Func<JobDetailedDto, Job, Dictionary<string, string>, TDto> selector)

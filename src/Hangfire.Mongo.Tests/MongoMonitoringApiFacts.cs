@@ -288,24 +288,17 @@ namespace Hangfire.Mongo.Tests
                 Arguments = "['Arguments']",
                 StateName = stateName,
                 CreatedAt = database.GetServerTimeUtc(),
-                StateId = jobState.Id
-            };
-            database.Job.InsertOne(jobDto);
-
-            var jobQueueDto = new JobQueueDto
-            {
+                StateId = jobState.Id,
                 FetchedAt = null,
-                Id = ObjectId.GenerateNewId(),
-                JobId = jobId,
                 Queue = DefaultQueue
             };
 
             if (stateName == FetchedStateName)
             {
-                jobQueueDto.FetchedAt = database.GetServerTimeUtc();
+                jobDto.FetchedAt = database.GetServerTimeUtc();
             }
 
-            database.JobQueue.InsertOne(jobQueueDto);
+            database.Job.InsertOne(jobDto);
 
             return jobDto;
         }

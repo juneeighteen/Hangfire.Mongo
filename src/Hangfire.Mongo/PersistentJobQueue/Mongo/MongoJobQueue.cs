@@ -1,101 +1,67 @@
 using System;
-using System.Globalization;
 using System.Threading;
 using Hangfire.Annotations;
-using Hangfire.Mongo.Database;
 using Hangfire.Mongo.Dto;
 using Hangfire.Mongo.MongoUtils;
 using Hangfire.Storage;
 using MongoDB.Driver;
 using MongoDB.Bson;
+using Hangfire.Mongo.Database;
 
 namespace Hangfire.Mongo.PersistentJobQueue.Mongo
 {
-#pragma warning disable 1591
-    public class MongoJobQueue : IPersistentJobQueue
+    internal class MongoJobQueue : IPersistentJobQueue
     {
+        private readonly HangfireDbContext _context;
         private readonly MongoStorageOptions _options;
-
-        private readonly HangfireDbContext _connection;
 
         public MongoJobQueue(HangfireDbContext connection, MongoStorageOptions options)
         {
+            if (connection == null)
+                throw new ArgumentNullException(nameof(connection));
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            if (connection == null)
-                throw new ArgumentNullException(nameof(connection));
-
+            _context = connection;
             _options = options;
-            _connection = connection;
         }
 
         [NotNull]
         public IFetchedJob Dequeue(string[] queues, CancellationToken cancellationToken)
         {
-            if (queues == null)
-                throw new ArgumentNullException(nameof(queues));
+            if (queues == null) throw new ArgumentNullException(nameof(queues));
+            if (queues.Length == 0) throw new ArgumentException("Queue array must be non-empty.", nameof(queues));
 
-            if (queues.Length == 0)
-                throw new ArgumentException("Queue array must be non-empty.", nameof(queues));
-
-            JobQueueDto fetchedJob = null;
-
-            var fetchConditions = new[]
-            {
-                Builders<JobQueueDto>.Filter.Eq(_ => _.FetchedAt, null),
-                Builders<JobQueueDto>.Filter.Lt(_ => _.FetchedAt, _connection.GetServerTimeUtc().AddSeconds(_options.InvisibilityTimeout.Negate().TotalSeconds))
-            };
-            var currentQueryIndex = 0;
-
-            do
+            while (true)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                FilterDefinition<JobQueueDto> fetchCondition = fetchConditions[currentQueryIndex];
-
-                foreach (var queue in queues)
+             
+                var fetchedJob = _context.Job.FindOneAndUpdate(
+                    Builders<JobDto>.Filter.In(_ => _.Queue, queues) &
+                    (Builders<JobDto>.Filter.Eq(_ => _.FetchedAt, null) |
+                     //avoid call to getserver time
+                     Builders<JobDto>.Filter.Lt(_ => _.FetchedAt, _context.GetServerTimeUtc().Add(_options.InvisibilityTimeout.Negate()))),
+                    Builders<JobDto>.Update.CurrentDate(_ => _.FetchedAt),
+                    new FindOneAndUpdateOptions<JobDto> { ReturnDocument = ReturnDocument.After },
+                    cancellationToken);
+                
+                if (fetchedJob != null)
                 {
-                    fetchedJob = _connection.JobQueue.FindOneAndUpdate(
-                            fetchCondition & Builders<JobQueueDto>.Filter.Eq(_ => _.Queue, queue),
-                            Builders<JobQueueDto>.Update.Set(_ => _.FetchedAt, _connection.GetServerTimeUtc()),
-                            new FindOneAndUpdateOptions<JobQueueDto>
-                            {
-                                IsUpsert = false,
-                                ReturnDocument = ReturnDocument.After
-                            }, cancellationToken);
-                    if (fetchedJob != null)
-                    {
-                        break;
-                    }
+                    return new MongoFetchedJob(_context, fetchedJob.Id.ToString(), fetchedJob.Queue);
                 }
 
-                if (fetchedJob == null)
-                {
-                    if (currentQueryIndex == fetchConditions.Length - 1)
-                    {
-                        cancellationToken.WaitHandle.WaitOne(_options.QueuePollInterval);
-                        cancellationToken.ThrowIfCancellationRequested();
-                    }
-                }
-
-                currentQueryIndex = (currentQueryIndex + 1) % fetchConditions.Length;
+                cancellationToken.WaitHandle.WaitOne(_options.QueuePollInterval);
             }
-            while (fetchedJob == null);
 
-            return new MongoFetchedJob(_connection, fetchedJob.Id, fetchedJob.JobId.ToString(), fetchedJob.Queue);
         }
 
         public void Enqueue(string queue, string jobId)
         {
-            _connection
-                .JobQueue
-                .InsertOne(new JobQueueDto
-                {
-                    JobId = new ObjectId(jobId),
-                    Queue = queue
-                });
+            _context.Job.UpdateOne(
+                Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(jobId)),
+                Builders<JobDto>.Update.Set(_ => _.Queue, queue)
+                                       .Set(_ => _.FetchedAt, null));
         }
     }
-#pragma warning disable 1591
 }

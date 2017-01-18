@@ -24,27 +24,19 @@ namespace Hangfire.Mongo
         /// Constructs fetched job by database connection, identifier, job ID and queue
         /// </summary>
         /// <param name="connection">Database connection</param>
-        /// <param name="id">Identifier</param>
         /// <param name="jobId">Job ID</param>
         /// <param name="queue">Queue name</param>
-        public MongoFetchedJob(HangfireDbContext connection, ObjectId id, string jobId, string queue)
+        public MongoFetchedJob(HangfireDbContext connection, string jobId, string queue)
         {
             if (connection == null) throw new ArgumentNullException(nameof(connection));
             if (jobId == null) throw new ArgumentNullException(nameof(jobId));
             if (queue == null) throw new ArgumentNullException(nameof(queue));
 
             _connection = connection;
-
-            Id = id;
+            
             JobId = jobId;
             Queue = queue;
         }
-
-
-        /// <summary>
-        /// Identifier
-        /// </summary>
-        public ObjectId Id { get; private set; }
 
         /// <summary>
         /// Job ID
@@ -61,9 +53,10 @@ namespace Hangfire.Mongo
         /// </summary>
         public void RemoveFromQueue()
         {
-            _connection
-               .JobQueue
-               .DeleteOne(Builders<JobQueueDto>.Filter.Eq(_ => _.Id, Id));
+            _connection.Job.UpdateOne(
+                    Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(JobId)),
+                    Builders<JobDto>.Update.Set(_ => _.Queue, null).Set(_ => _.FetchedAt, null)
+            );
 
             _removedFromQueue = true;
         }
@@ -73,9 +66,10 @@ namespace Hangfire.Mongo
         /// </summary>
         public void Requeue()
         {
-            _connection.JobQueue.FindOneAndUpdate(
-                Builders<JobQueueDto>.Filter.Eq(_ => _.Id, Id),
-                Builders<JobQueueDto>.Update.Set(_ => _.FetchedAt, null));
+            _connection.Job.UpdateOne(
+                Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(JobId)),
+                Builders<JobDto>.Update.Set(_ => _.FetchedAt, null)
+            );
 
             _requeued = true;
         }

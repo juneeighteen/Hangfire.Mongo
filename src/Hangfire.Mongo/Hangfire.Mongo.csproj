@@ -57,7 +57,6 @@
     <Compile Include="Dto\IdentifierDto.cs" />
     <Compile Include="Dto\JobDetailedDto.cs" />
     <Compile Include="Dto\JobDto.cs" />
-    <Compile Include="Dto\JobQueueDto.cs" />
     <Compile Include="Dto\ListDto.cs" />
     <Compile Include="Dto\SchemaDto.cs" />
     <Compile Include="Dto\ServerDataDto.cs" />

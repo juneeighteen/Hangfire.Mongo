@@ -30,6 +30,10 @@ namespace Hangfire.Mongo.Dto
         public DateTime? ExpireAt { get; set; }
 
         public IDictionary<string, string> Parameters { get; set;  }
+
+        public string Queue { get; set; }
+
+        public DateTime? FetchedAt { get; set; }
     }
 #pragma warning restore 1591
 }

@@ -98,11 +98,6 @@ namespace Hangfire.Mongo.Database
         public virtual IMongoCollection<JobDto> Job => Database.GetCollection<JobDto>(_prefix + ".job");
 
         /// <summary>
-        /// Reference to collection which contains jobs queues
-        /// </summary>
-        public virtual IMongoCollection<JobQueueDto> JobQueue => Database.GetCollection<JobQueueDto>(_prefix + ".jobQueue");
-
-        /// <summary>
         /// Reference to collection which contains lists
         /// </summary>
         public virtual IMongoCollection<ListDto> List => Database.GetCollection<ListDto>(_prefix + ".list");
@@ -158,14 +153,14 @@ namespace Hangfire.Mongo.Database
         {
             // Create for jobid on state, jobParameter, jobQueue
             State.CreateDescendingIndex(p => p.JobId);
-            JobQueue.CreateDescendingIndex(p => p.JobId);
+            Job.Indexes.CreateOne(Builders<JobDto>.IndexKeys.Ascending(p => p.Queue).Ascending(p => p.FetchedAt));
             CreateTTLIndexes();
         }
 
         private void CreateTTLIndexes()
         {
             //create ttl indexes to avoid polling 
-            var indexOption = new CreateIndexOptions() { ExpireAfter = TimeSpan.FromSeconds(0) };
+            var indexOption = new CreateIndexOptions() { ExpireAfter = TimeSpan.Zero };
             AggregatedCounter.Indexes.CreateOne(Builders<AggregatedCounterDto>.IndexKeys.Ascending(_ => _.ExpireAt), indexOption);
             Counter.Indexes.CreateOne(Builders<CounterDto>.IndexKeys.Ascending(_ => _.ExpireAt), indexOption);
             Job.Indexes.CreateOne(Builders<JobDto>.IndexKeys.Ascending(_ => _.ExpireAt), indexOption);
