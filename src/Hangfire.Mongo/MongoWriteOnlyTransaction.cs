@@ -55,7 +55,6 @@ namespace Hangfire.Mongo
             {
                 StateDto stateDto = new StateDto
                 {
-                    Id = ObjectId.GenerateNewId(),
                     JobId = new ObjectId(jobId),
                     Name = state.Name,
                     Reason = state.Reason,
@@ -66,10 +65,7 @@ namespace Hangfire.Mongo
 
                 x.Job.UpdateMany(
                     Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(jobId)),
-                    Builders<JobDto>.Update.Set(_ => _.StateId, stateDto.Id));
-
-                x.Job.UpdateMany(Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(jobId)),
-                    Builders<JobDto>.Update.Set(_ => _.StateName, state.Name));
+                    Builders<JobDto>.Update.Set(_ => _.StateId, stateDto.Id).Set(_ => _.StateName, state.Name));
             });
         }
 
@@ -77,7 +73,6 @@ namespace Hangfire.Mongo
         {
             QueueCommand(_ => _.State.InsertOne(new StateDto
             {
-                Id = ObjectId.GenerateNewId(),
                 JobId = new ObjectId(jobId),
                 Name = state.Name,
                 Reason = state.Reason,
@@ -101,7 +96,6 @@ namespace Hangfire.Mongo
         {
             QueueCommand(_ => _.Counter.InsertOne(new CounterDto
             {
-                Id = ObjectId.GenerateNewId(),
                 Key = key,
                 Value = +1
             }));
@@ -111,7 +105,6 @@ namespace Hangfire.Mongo
         {
             QueueCommand(_ => _.Counter.InsertOne(new CounterDto
             {
-                Id = ObjectId.GenerateNewId(),
                 Key = key,
                 Value = +1,
                 ExpireAt = _connection.GetServerTimeUtc().Add(expireIn)
@@ -122,7 +115,6 @@ namespace Hangfire.Mongo
         {
             QueueCommand(_ => _.Counter.InsertOne(new CounterDto
             {
-                Id = ObjectId.GenerateNewId(),
                 Key = key,
                 Value = -1
             }));
@@ -132,7 +124,6 @@ namespace Hangfire.Mongo
         {
             QueueCommand(_ => _.Counter.InsertOne(new CounterDto
             {
-                Id = ObjectId.GenerateNewId(),
                 Key = key,
                 Value = -1,
                 ExpireAt = _connection.GetServerTimeUtc().Add(expireIn)
@@ -165,7 +156,6 @@ namespace Hangfire.Mongo
         {
             QueueCommand(_ => _.List.InsertOne(new ListDto
             {
-                Id = ObjectId.GenerateNewId(),
                 Key = key,
                 Value = value
             }));

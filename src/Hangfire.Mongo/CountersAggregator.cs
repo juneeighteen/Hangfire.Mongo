@@ -93,7 +93,6 @@ namespace Hangfire.Mongo
                         {
                             database.AggregatedCounter.InsertOne(new AggregatedCounterDto
                             {
-                                Id = ObjectId.GenerateNewId(),
                                 Key = item.Key,
                                 Value = item.Value,
                                 ExpireAt = item.ExpireAt
