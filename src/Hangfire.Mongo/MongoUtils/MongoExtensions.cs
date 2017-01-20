@@ -27,14 +27,13 @@ namespace Hangfire.Mongo.MongoUtils
         /// <returns>Server time</returns>
         public static DateTime GetServerTimeUtc(this IMongoDatabase database)
         {
-            bool hasChanged = false;
             if (LastSync == null || LastSync.Value.AddMilliseconds(SynchronizeIntervalMs) < DateTime.UtcNow)
             {
                 lock (LockTimeSync)
                 {
-                    if (hasChanged)
-                        return GetServerTimeUtc(database);
-                    hasChanged = true;
+                    if (LastSync != null && LastSync.Value.AddMilliseconds(SynchronizeIntervalMs) > DateTime.UtcNow)
+                        return DateTime.UtcNow.Add(ClientServerTimeDiff);
+
                     var serverStatus = database.RunCommand<BsonDocument>(new BsonDocument("isMaster", 1));
                     BsonValue localTime;
                     var result = serverStatus.TryGetValue("localTime", out localTime)
