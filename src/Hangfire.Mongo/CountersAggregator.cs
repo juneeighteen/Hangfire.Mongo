@@ -65,8 +65,12 @@ namespace Hangfire.Mongo
 
                     List<CounterDto> recordsToAggregate = database
                         .Counter.Find(new BsonDocument())
+                        .SortBy(_ => _.Id)
                         .Limit(NumberOfRecordsInSinglePass)
                         .ToList();
+
+                    if (!recordsToAggregate.Any())
+                        return;
 
                     var recordsToMerge = recordsToAggregate
                         .GroupBy(_ => _.Key).Select(_ => new
@@ -102,8 +106,9 @@ namespace Hangfire.Mongo
 
                     removedCount = database
                         .Counter
-                        .DeleteMany(Builders<CounterDto>.Filter.In(_ => _.Id, recordsToAggregate.Select(_ => _.Id)))
+                        .DeleteMany(Builders<CounterDto>.Filter.Lte(_ => _.Id, recordsToAggregate.Last().Id))
                         .DeletedCount;
+
                 }
 
                 if (removedCount >= NumberOfRecordsInSinglePass)

@@ -39,13 +39,13 @@ namespace Hangfire.Mongo
 
         public override void ExpireJob(string jobId, TimeSpan expireIn)
         {
-            QueueCommand(_ => _.Job.UpdateMany(Builders<JobDto>.Filter.Eq(x => x.Id, new ObjectId(jobId)),
+            QueueCommand(_ => _.Job.UpdateOne(Builders<JobDto>.Filter.Eq(x => x.Id, new ObjectId(jobId)),
                 Builders<JobDto>.Update.Set(x => x.ExpireAt, _connection.GetServerTimeUtc().Add(expireIn))));
         }
 
         public override void PersistJob(string jobId)
         {
-            QueueCommand(_ => _.Job.UpdateMany(Builders<JobDto>.Filter.Eq(x => x.Id, new ObjectId(jobId)),
+            QueueCommand(_ => _.Job.UpdateOne(Builders<JobDto>.Filter.Eq(x => x.Id, new ObjectId(jobId)),
                 Builders<JobDto>.Update.Set(x => x.ExpireAt, null)));
         }
 
@@ -63,7 +63,7 @@ namespace Hangfire.Mongo
 				};
                 x.State.InsertOne(stateDto);
 
-                x.Job.UpdateMany(
+                x.Job.UpdateOne(
                     Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(jobId)),
                     Builders<JobDto>.Update.Set(_ => _.StateId, stateDto.Id).Set(_ => _.StateName, state.Name));
             });
@@ -172,22 +172,33 @@ namespace Hangfire.Mongo
         {
             QueueCommand(x =>
             {
-                int start = keepStartingFrom + 1;
-                int end = keepEndingAt + 1;
-
-                ObjectId[] items = ((IEnumerable<ListDto>)x.List
+                if (keepStartingFrom > keepEndingAt)
+                {
+                    x.List.DeleteMany(Builders<ListDto>.Filter.Eq(_ => _.Key, key));
+                    return;
+                }
+                var items = x.List
                         .Find(new BsonDocument())
-                        .Project(Builders<ListDto>.Projection.Include(_ => _.Key))
-                        .Project(_ => _)
-                        .ToList())
-                    .Reverse()
-                    .Select((data, i) => new { Index = i + 1, Data = data.Id })
-                    .Where(_ => ((_.Index >= start) && (_.Index <= end)) == false)
-                    .Select(_ => _.Data)
-                    .ToArray();
+                        .SortByDescending(s => s.Id)
+                        .Skip(keepStartingFrom)
+                        .Limit(keepEndingAt - keepStartingFrom + 1)
+                        .Project(p => new { p.Id })
+                        .ToList();
+                var first = items.FirstOrDefault();
+                var last = items.LastOrDefault();
 
-                x.List.DeleteMany(Builders<ListDto>.Filter.Eq(_ => _.Key, key) & Builders<ListDto>.Filter.In(_ => _.Id, items));
+                FilterDefinition<ListDto> filter = null;
+                if (first != null)
+                    filter = Builders<ListDto>.Filter.Gt(_ => _.Id, first.Id);
+                if (last != null)
+                    filter = (filter | Builders<ListDto>.Filter.Lt(_ => _.Id, last.Id));
+                var finalFilter = Builders<ListDto>.Filter.Eq(_ => _.Key, key);
+                if (filter != null)
+                    finalFilter = finalFilter & filter;
+
+                x.List.DeleteMany(finalFilter);
             });
+                  
         }
 
         public override void SetRangeInHash(string key, IEnumerable<KeyValuePair<string, string>> keyValuePairs)

@@ -31,7 +31,7 @@ namespace Hangfire.Mongo.Database
             var client = new MongoClient(connectionString);
             
             Database = client.GetDatabase(databaseName);
-           
+            InitCollection();
             ConnectionId = Guid.NewGuid().ToString();
         }
 
@@ -48,7 +48,7 @@ namespace Hangfire.Mongo.Database
             var client = new MongoClient(mongoClientSettings);
 
             Database = client.GetDatabase(databaseName);
-
+            InitCollection();
             ConnectionId = Guid.NewGuid().ToString();
         }
 
@@ -59,7 +59,13 @@ namespace Hangfire.Mongo.Database
         public HangfireDbContext(IMongoDatabase database)
         {
             Database = database;
+            InitCollection();
             ConnectionId = Guid.NewGuid().ToString();
+        }
+
+        private IMongoCollection<T> GetCollection<T>(string suffix)
+        {
+            return Database.GetCollection<T>(_prefix + "." + suffix);
         }
 
         /// <summary>
@@ -68,59 +74,54 @@ namespace Hangfire.Mongo.Database
         public string ConnectionId { get; private set; }
 
         /// <summary>
-        /// Reference to collection which contains identifiers
-        /// </summary>
-        public virtual IMongoCollection<IdentifierDto> Identifiers => Database.GetCollection<IdentifierDto>(_prefix + "_identifiers");
-
-        /// <summary>
         /// Reference to collection which contains distributed locks
         /// </summary>
-        public virtual IMongoCollection<DistributedLockDto> DistributedLock => Database.GetCollection<DistributedLockDto>(_prefix + ".locks");
+        public virtual IMongoCollection<DistributedLockDto> DistributedLock { get; private set; }
 
         /// <summary>
         /// Reference to collection which contains counters
         /// </summary>
-        public virtual IMongoCollection<CounterDto> Counter => Database.GetCollection<CounterDto>(_prefix + ".counter");
+        public virtual IMongoCollection<CounterDto> Counter { get; private set; }
 
         /// <summary>
         /// Reference to collection which contains aggregated counters
         /// </summary>
-        public virtual IMongoCollection<AggregatedCounterDto> AggregatedCounter => Database.GetCollection<AggregatedCounterDto>(_prefix + ".aggregatedcounter");
+        public virtual IMongoCollection<AggregatedCounterDto> AggregatedCounter { get; private set; }
 
         /// <summary>
         /// Reference to collection which contains hashes
         /// </summary>
-        public virtual IMongoCollection<HashDto> Hash => Database.GetCollection<HashDto>(_prefix + ".hash");
+        public virtual IMongoCollection<HashDto> Hash { get; private set; }
 
         /// <summary>
         /// Reference to collection which contains jobs
         /// </summary>
-        public virtual IMongoCollection<JobDto> Job => Database.GetCollection<JobDto>(_prefix + ".job");
+        public virtual IMongoCollection<JobDto> Job { get; private set; }
 
         /// <summary>
         /// Reference to collection which contains lists
         /// </summary>
-        public virtual IMongoCollection<ListDto> List => Database.GetCollection<ListDto>(_prefix + ".list");
+        public virtual IMongoCollection<ListDto> List { get; private set; }
 
         /// <summary>
         /// Reference to collection which contains schemas
         /// </summary>
-        public virtual IMongoCollection<SchemaDto> Schema => Database.GetCollection<SchemaDto>(_prefix + ".schema");
+        public virtual IMongoCollection<SchemaDto> Schema { get; private set; }
 
         /// <summary>
         /// Reference to collection which contains servers information
         /// </summary>
-        public virtual IMongoCollection<ServerDto> Server => Database.GetCollection<ServerDto>(_prefix + ".server");
+        public virtual IMongoCollection<ServerDto> Server { get; private set; }
 
         /// <summary>
         /// Reference to collection which contains sets
         /// </summary>
-        public virtual IMongoCollection<SetDto> Set => Database.GetCollection<SetDto>(_prefix + ".set");
+        public virtual IMongoCollection<SetDto> Set { get; private set; }
 
         /// <summary>
         /// Reference to collection which contains states
         /// </summary>
-        public virtual IMongoCollection<StateDto> State => Database.GetCollection<StateDto>(_prefix + ".state");
+        public virtual IMongoCollection<StateDto> State { get; private set; }
 
         /// <summary>
         /// Initializes intial collections schema for Hangfire
@@ -148,12 +149,31 @@ namespace Hangfire.Mongo.Database
             CreateJobIndexes();
         }
 
+        private void InitCollection()
+        {
+            DistributedLock = GetCollection<DistributedLockDto>("locks");
+            Counter = GetCollection<CounterDto>("counter");
+            AggregatedCounter = GetCollection<AggregatedCounterDto>("aggregate");
+            Hash = GetCollection<HashDto>("hash");
+            Job = GetCollection<JobDto>("job");
+            List = GetCollection<ListDto>("list");
+            Schema = GetCollection<SchemaDto>("schema");
+            Server = GetCollection<ServerDto>("server");
+            Set = GetCollection<SetDto>("set");
+            State = GetCollection<StateDto>("state");
+
+        }
 
         private void CreateJobIndexes()
         {
             // Create for jobid on state, jobParameter, jobQueue
             State.CreateDescendingIndex(p => p.JobId);
             Job.Indexes.CreateOne(Builders<JobDto>.IndexKeys.Ascending(p => p.Queue).Ascending(p => p.FetchedAt));
+            //List.Indexes.CreateOne(Builders<ListDto>.IndexKeys.Ascending(p => p.Key));
+            Set.Indexes.CreateOne(Builders<SetDto>.IndexKeys.Ascending(p => p.Key));
+            Hash.Indexes.CreateOne(Builders<HashDto>.IndexKeys.Ascending(p => p.Key));
+            Counter.Indexes.CreateOne(Builders<CounterDto>.IndexKeys.Ascending(p => p.Key));
+            AggregatedCounter.Indexes.CreateOne(Builders<AggregatedCounterDto>.IndexKeys.Ascending(p => p.Key));
             CreateTTLIndexes();
         }
 

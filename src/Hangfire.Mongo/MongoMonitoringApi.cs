@@ -92,10 +92,6 @@ namespace Hangfire.Mongo
                 if (job == null)
                     return null;
 
-                IDictionary<string, string> parameters = connection.Job
-                    .AsQueryable().Where(x => x.Id == new ObjectId(jobId))
-                    .FirstOrDefault().Parameters;
-
                 List<StateHistoryDto> history = connection.State
                     .Find(Builders<StateDto>.Filter.Eq(_ => _.JobId, new ObjectId(jobId)))
                     .Sort(Builders<StateDto>.Sort.Descending(_ => _.CreatedAt))
@@ -113,7 +109,7 @@ namespace Hangfire.Mongo
                     CreatedAt = job.CreatedAt,
                     Job = DeserializeJob(job.InvocationData, job.Arguments),
                     History = history,
-                    Properties = parameters
+                    Properties = job.Parameters
                 };
             });
         }
