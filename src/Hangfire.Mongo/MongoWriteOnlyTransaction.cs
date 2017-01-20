@@ -39,13 +39,13 @@ namespace Hangfire.Mongo
 
         public override void ExpireJob(string jobId, TimeSpan expireIn)
         {
-            QueueCommand(_ => _.Job.UpdateMany(Builders<JobDto>.Filter.Eq(x => x.Id, new ObjectId(jobId)),
+            QueueCommand(_ => _.Job.UpdateOne(Builders<JobDto>.Filter.Eq(x => x.Id, new ObjectId(jobId)),
                 Builders<JobDto>.Update.Set(x => x.ExpireAt, _connection.GetServerTimeUtc().Add(expireIn))));
         }
 
         public override void PersistJob(string jobId)
         {
-            QueueCommand(_ => _.Job.UpdateMany(Builders<JobDto>.Filter.Eq(x => x.Id, new ObjectId(jobId)),
+            QueueCommand(_ => _.Job.UpdateOne(Builders<JobDto>.Filter.Eq(x => x.Id, new ObjectId(jobId)),
                 Builders<JobDto>.Update.Set(x => x.ExpireAt, null)));
         }
 
@@ -63,7 +63,7 @@ namespace Hangfire.Mongo
 				};
                 x.State.InsertOne(stateDto);
 
-                x.Job.UpdateMany(
+                x.Job.UpdateOne(
                     Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(jobId)),
                     Builders<JobDto>.Update.Set(_ => _.StateId, stateDto.Id).Set(_ => _.StateName, state.Name));
             });
@@ -163,9 +163,10 @@ namespace Hangfire.Mongo
 
         public override void RemoveFromList(string key, string value)
         {
-            QueueCommand(_ => _.List.DeleteMany(
-                Builders<ListDto>.Filter.Eq(x => x.Key, key) &
-                Builders<ListDto>.Filter.Eq(x => x.Value, value)));
+            QueueCommand(_ =>
+                _.List.DeleteMany(
+                    Builders<ListDto>.Filter.Eq(x => x.Key, key) &
+                    Builders<ListDto>.Filter.Eq(x => x.Value, value)));
         }
 
         public override void TrimList(string key, int keepStartingFrom, int keepEndingAt)
@@ -174,6 +175,11 @@ namespace Hangfire.Mongo
             {
                 int start = keepStartingFrom + 1;
                 int end = keepEndingAt + 1;
+                /*$@";with cte as (
+    select row_number() over (order by Id desc) as row_num
+    from [{_storage.SchemaName}].List
+    where [Key] = @key)
+delete from cte where row_num not between @start and @end"*/
 
                 ObjectId[] items = ((IEnumerable<ListDto>)x.List
                         .Find(new BsonDocument())

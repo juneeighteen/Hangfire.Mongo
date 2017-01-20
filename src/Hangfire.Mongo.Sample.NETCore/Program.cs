@@ -5,7 +5,7 @@ namespace Hangfire.Mongo.Sample.NETCore
 {
     public class Program
     {
-        private const int JobCount = 100;
+        private const int JobCount = 1000;
         private static DateTime startAt = DateTime.MinValue;
 
         public static void Main(string[] args)
@@ -16,7 +16,7 @@ namespace Hangfire.Mongo.Sample.NETCore
             });
             DateTime now = DateTime.UtcNow;
             startAt = now;
-            using (new BackgroundJobServer(new BackgroundJobServerOptions { WorkerCount = 2 }))
+            using (new BackgroundJobServer(new BackgroundJobServerOptions { WorkerCount = 3 }))
             {
                 for (var i = 0; i < JobCount; i++)
                 {

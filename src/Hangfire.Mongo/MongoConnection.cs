@@ -127,12 +127,12 @@ namespace Hangfire.Mongo
             if (name == null)
                 throw new ArgumentNullException(nameof(name));
 
-            var jobParameter = Database.Job.AsQueryable()
-                .Where(_ => _.Id == new ObjectId(id) && _.Parameters[name] != null)
-                .Select(_ => _.Parameters[name])
-                .FirstOrDefault();
+            var jobParameter = Database.Job.Find(Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(id)))
+                                        .Project(Builders<JobDto>.Projection.Include(_ => _.Parameters[name]))
+                                        .Project(_ => new { Parameter = _.Parameters[name] })
+                                        .FirstOrDefault();
 
-            return jobParameter;
+            return jobParameter?.Parameter; 
         }
 
         public override JobData GetJobData(string jobId)
