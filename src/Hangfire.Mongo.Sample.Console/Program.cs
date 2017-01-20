@@ -22,7 +22,7 @@ namespace Hangfire.Mongo.Sample.NETCore
             //    QueuePollInterval = TimeSpan.FromSeconds(1)
             //});
 
-            var server = new BackgroundJobServer(new BackgroundJobServerOptions { WorkerCount = 6 });
+            var server = new BackgroundJobServer(new BackgroundJobServerOptions { WorkerCount = 4 });
             for (int i = 0; i < NbrRestart; i++)
             {
                 Enqueue();

@@ -174,17 +174,11 @@ namespace Hangfire.Mongo
             if (jobId == null)
                 throw new ArgumentNullException(nameof(jobId));
 
-            var job = Database
-                .Job
-                .Find(Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(jobId)))
-                .FirstOrDefault();
-
-            if (job == null)
-                return null;
-
+            //get the last one
             var state = Database
                 .State
-                .Find(Builders<StateDto>.Filter.Eq(_ => _.Id, job.StateId))
+                .Find(Builders<StateDto>.Filter.Eq(_ => _.JobId, new ObjectId(jobId)))
+                .SortByDescending(_ => _.Id)
                 .FirstOrDefault();
 
             if (state == null)
