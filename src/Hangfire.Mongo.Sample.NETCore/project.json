@@ -5,7 +5,6 @@
     "emitEntryPoint": true
   },
   "runtimes": {
-    "win10-x86": {},
     "win10-x64": {}
   },
   "frameworks": {

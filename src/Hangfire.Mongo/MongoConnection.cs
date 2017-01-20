@@ -113,9 +113,9 @@ namespace Hangfire.Mongo
             if (name == null)
                 throw new ArgumentNullException(nameof(name));
 
-            var filter = Builders<JobDto>.Filter.Where(x => x.Id == new ObjectId(id));
+            var filter = Builders<JobDto>.Filter.Eq(x => x.Id, new ObjectId(id));
             var update = Builders<JobDto>.Update.Set(x => x.Parameters[name], value);
-            var result = Database.Job.UpdateMany(filter, update);
+            var result = Database.Job.UpdateOne(filter, update);
         }
 
         public override string GetJobParameter(string id, string name)
@@ -127,7 +127,6 @@ namespace Hangfire.Mongo
                 throw new ArgumentNullException(nameof(name));
 
             var jobParameter = Database.Job.Find(Builders<JobDto>.Filter.Eq(_ => _.Id, new ObjectId(id)))
-                                        .Project(Builders<JobDto>.Projection.Include(_ => _.Parameters[name]))
                                         .Project(_ => new { Parameter = _.Parameters[name] })
                                         .FirstOrDefault();
 
