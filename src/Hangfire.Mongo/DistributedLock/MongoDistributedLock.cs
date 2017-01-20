@@ -246,7 +246,7 @@ namespace Hangfire.Mongo.DistributedLock
         /// </summary>
         private void StartHeartBeat()
         {
-            TimeSpan timerInterval = TimeSpan.FromMilliseconds(_options.DistributedLockLifetime.TotalMilliseconds / 5);
+            TimeSpan timerInterval = TimeSpan.FromMilliseconds(_options.DistributedLockLifetime.TotalMilliseconds / 2);
 
             _heartbeatTimer = new Timer(state =>
             {

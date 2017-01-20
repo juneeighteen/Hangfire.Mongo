@@ -54,7 +54,6 @@
     <Compile Include="Dto\CounterDto.cs" />
     <Compile Include="Dto\DistributedLockDto.cs" />
     <Compile Include="Dto\HashDto.cs" />
-    <Compile Include="Dto\IdentifierDto.cs" />
     <Compile Include="Dto\JobDetailedDto.cs" />
     <Compile Include="Dto\JobDto.cs" />
     <Compile Include="Dto\ListDto.cs" />

@@ -16,7 +16,7 @@ namespace Hangfire.Mongo.Sample.NETCore
             });
             DateTime now = DateTime.UtcNow;
             startAt = now;
-            using (new BackgroundJobServer(new BackgroundJobServerOptions { WorkerCount = 3 }))
+            using (new BackgroundJobServer(new BackgroundJobServerOptions { WorkerCount = 4 }))
             {
                 for (var i = 0; i < JobCount; i++)
                 {
