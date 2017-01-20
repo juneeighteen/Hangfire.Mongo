@@ -95,7 +95,7 @@ namespace Hangfire.Mongo.Tests
 
                 Assert.NotNull(result);
                 Assert.NotNull(result.Job);
-                Assert.Equal("Arguments", result.Job.Args[0]);
+                Assert.Equal("wrong", result.Job.Args[0]);
                 Assert.True(database.GetServerTimeUtc().AddMinutes(-1) < result.CreatedAt);
                 Assert.True(result.CreatedAt < DateTime.UtcNow.AddMinutes(1));
             });
@@ -284,8 +284,7 @@ namespace Hangfire.Mongo.Tests
             var jobDto = new JobDto
             {
                 Id = jobId,
-                InvocationData = JobHelper.ToJson(InvocationData.Serialize(job)),
-                Arguments = "['Arguments']",
+                InvocationData = InvocationData.Serialize(job),
                 StateName = stateName,
                 CreatedAt = database.GetServerTimeUtc(),
                 StateId = jobState.Id,

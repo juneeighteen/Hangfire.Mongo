@@ -6,8 +6,9 @@ namespace Hangfire.Mongo.Sample.NETCore
     public class Program
     {
         private const int JobCount = 1000;
-        private static DateTime startAt = DateTime.MinValue;
-        private static int nbrRestart = 0;
+        private static DateTime StartAt = DateTime.MinValue;
+        private static int NbrRestart = 5;
+        private static int Processed = 0;
 
         public static void Main(string[] args)
         {
@@ -20,49 +21,41 @@ namespace Hangfire.Mongo.Sample.NETCore
             //{
             //    QueuePollInterval = TimeSpan.FromSeconds(1)
             //});
-            DateTime now = DateTime.UtcNow;
-            startAt = now;
 
-            using (new BackgroundJobServer(new BackgroundJobServerOptions { WorkerCount = 4 }))
+            var server = new BackgroundJobServer(new BackgroundJobServerOptions { WorkerCount = 6 });
+            for (int i = 0; i < NbrRestart; i++)
             {
-                for (var i = 0; i < JobCount; i++)
-                {
-                    var jobId = i;
-                    now = DateTime.UtcNow;
-
-                    BackgroundJob.Enqueue(() => Do(now, i));
-                }
-
-                Console.WriteLine($"{JobCount} job(s) has been enqued. They will be executed shortly!");
-                Console.WriteLine($"");
-                Console.WriteLine($"If you close this application before they are executed, ");
-                Console.WriteLine($"they will be executed the next time you run this sample.");
-                Console.WriteLine($"");
-                Console.WriteLine($"Press any key to exit...");
-
+                Enqueue();
+                Console.WriteLine($"Press any key to continue...");
                 Console.ReadKey(true);
-
             }
-
-
+            Console.WriteLine($"Press any key to exit...");
         }
 
-        private static int Processed = 0;
+        private static void Enqueue()
+        {
+            Processed = 0;
+            DateTime now = DateTime.UtcNow;
+            StartAt = now;
+            for (var i = 0; i < JobCount; i++)
+            {
+                var jobId = i;
+                now = DateTime.UtcNow;
+
+                BackgroundJob.Enqueue(() => Do(now, i));
+            }
+
+            Console.WriteLine($"{JobCount} job(s) has been enqued. They will be executed shortly!");
+        }
+
         public static void Do(DateTime launched, int count)
         {
             if (count == 0)
-                startAt = DateTime.UtcNow;
-            var done = Interlocked.Increment(ref Processed);
-            // Console.WriteLine($"Fire-and-forget ({count}) time: {(DateTime.UtcNow - launched.ToUniversalTime()).TotalMilliseconds} ms");
+                StartAt = DateTime.UtcNow;
+            int done = Interlocked.Increment(ref Processed);
             if (done == JobCount)
             {
-                Console.WriteLine($"total done in: {(DateTime.UtcNow - startAt.ToUniversalTime()).TotalMilliseconds} ms");
-                if (nbrRestart == 0)
-                {
-                    nbrRestart++;
-                    Processed = 0;
-                    Main(new string[0]);
-                }
+                Console.WriteLine($"total done in: {(DateTime.UtcNow - StartAt.ToUniversalTime()).TotalMilliseconds} ms");
             }
         }
     }

@@ -3,6 +3,8 @@ using Hangfire.Mongo.Dto;
 using Hangfire.Mongo.MongoUtils;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Bson.Serialization;
+using Hangfire.Storage;
 
 namespace Hangfire.Mongo.Database
 {
@@ -17,6 +19,18 @@ namespace Hangfire.Mongo.Database
         private readonly string _prefix;
 
         internal IMongoDatabase Database { get; }
+
+        static HangfireDbContext()
+        {
+            BsonClassMap.RegisterClassMap<InvocationData>(cm =>
+            {
+                cm.MapCreator(p => new InvocationData(p.Type, p.Method, p.ParameterTypes, p.Arguments));
+                cm.MapProperty(p => p.Arguments);
+                cm.MapProperty(p => p.ParameterTypes);
+                cm.MapProperty(p => p.Method);
+                cm.MapProperty(p => p.Type);
+            });
+        }
 
         /// <summary>
         /// Constructs context with connection string and database name
@@ -161,19 +175,19 @@ namespace Hangfire.Mongo.Database
             Server = GetCollection<ServerDto>("server");
             Set = GetCollection<SetDto>("set");
             State = GetCollection<StateDto>("state");
-
         }
 
         private void CreateJobIndexes()
         {
+            var background = new CreateIndexOptions() { Background = true };
             // Create for jobid on state, jobParameter, jobQueue
             State.CreateDescendingIndex(p => p.JobId);
             Job.Indexes.CreateOne(Builders<JobDto>.IndexKeys.Ascending(p => p.Queue).Ascending(p => p.FetchedAt));
             //List.Indexes.CreateOne(Builders<ListDto>.IndexKeys.Ascending(p => p.Key));
-            Set.Indexes.CreateOne(Builders<SetDto>.IndexKeys.Ascending(p => p.Key));
-            Hash.Indexes.CreateOne(Builders<HashDto>.IndexKeys.Ascending(p => p.Key));
-            Counter.Indexes.CreateOne(Builders<CounterDto>.IndexKeys.Ascending(p => p.Key));
-            AggregatedCounter.Indexes.CreateOne(Builders<AggregatedCounterDto>.IndexKeys.Ascending(p => p.Key));
+            Set.Indexes.CreateOne(Builders<SetDto>.IndexKeys.Ascending(p => p.Key), background);
+            Hash.Indexes.CreateOne(Builders<HashDto>.IndexKeys.Ascending(p => p.Key), background);
+            Counter.Indexes.CreateOne(Builders<CounterDto>.IndexKeys.Ascending(p => p.Key), background);
+            AggregatedCounter.Indexes.CreateOne(Builders<AggregatedCounterDto>.IndexKeys.Ascending(p => p.Key), background);
             CreateTTLIndexes();
         }
 

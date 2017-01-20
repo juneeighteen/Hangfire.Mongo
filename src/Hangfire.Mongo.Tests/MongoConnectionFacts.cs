@@ -155,8 +155,7 @@ namespace Hangfire.Mongo.Tests
                 Assert.Equal(ObjectId.Empty, databaseJob.StateId);
                 Assert.Equal(null, databaseJob.StateName);
 
-                var invocationData = JobHelper.FromJson<InvocationData>(databaseJob.InvocationData);
-                invocationData.Arguments = databaseJob.Arguments;
+                var invocationData = databaseJob.InvocationData;
 
                 var job = invocationData.Deserialize();
                 Assert.Equal(typeof(MongoConnectionFacts), job.Type);
@@ -200,8 +199,7 @@ namespace Hangfire.Mongo.Tests
 
                 var jobDto = new JobDto
                 {
-                    InvocationData = JobHelper.ToJson(InvocationData.Serialize(job)),
-                    Arguments = "['Arguments']",
+                    InvocationData = InvocationData.Serialize(job),
                     StateName = "Succeeded",
                     CreatedAt = database.GetServerTimeUtc()
                 };
@@ -212,7 +210,7 @@ namespace Hangfire.Mongo.Tests
                 Assert.NotNull(result);
                 Assert.NotNull(result.Job);
                 Assert.Equal("Succeeded", result.State);
-                Assert.Equal("Arguments", result.Job.Args[0]);
+                Assert.Equal("wrong", result.Job.Args[0]);
                 Assert.Null(result.LoadException);
                 Assert.True(database.GetServerTimeUtc().AddMinutes(-1) < result.CreatedAt);
                 Assert.True(result.CreatedAt < DateTime.UtcNow.AddMinutes(1));
@@ -249,8 +247,7 @@ namespace Hangfire.Mongo.Tests
 
                 var jobDto = new JobDto
                 {
-                    InvocationData = "",
-                    Arguments = "",
+                    InvocationData = new InvocationData("", "", "", ""),
                     StateName = "",
                     CreatedAt = database.GetServerTimeUtc()
                 };
@@ -296,8 +293,7 @@ namespace Hangfire.Mongo.Tests
             {
                 var jobDto = new JobDto
                 {
-                    InvocationData = JobHelper.ToJson(new InvocationData(null, null, null, null)),
-                    Arguments = "['Arguments']",
+                    InvocationData = new InvocationData(null, null, null, null),
                     StateName = "Succeeded",
                     CreatedAt = database.GetServerTimeUtc()
                 };
@@ -341,8 +337,7 @@ namespace Hangfire.Mongo.Tests
             {
                 var jobDto = new JobDto
                 {
-                    InvocationData = "",
-                    Arguments = "",
+                    InvocationData = new InvocationData("", "", "", ""),
                     CreatedAt = database.GetServerTimeUtc()
                 };
                 database.Job.InsertOne(jobDto);
@@ -364,8 +359,7 @@ namespace Hangfire.Mongo.Tests
             {
                 var jobDto = new JobDto
                 {
-                    InvocationData = "",
-                    Arguments = "",
+                    InvocationData = new InvocationData("", "", "", ""),
                     CreatedAt = database.GetServerTimeUtc()
                 };
                 database.Job.InsertOne(jobDto);
@@ -388,8 +382,7 @@ namespace Hangfire.Mongo.Tests
             {
                 var jobDto = new JobDto
                 {
-                    InvocationData = "",
-                    Arguments = "",
+                    InvocationData = new InvocationData("", "", "", ""),
                     CreatedAt = database.GetServerTimeUtc()
                 };
                 database.Job.InsertOne(jobDto);
@@ -445,8 +438,7 @@ namespace Hangfire.Mongo.Tests
             {
                 var jobDto = new JobDto
                 {
-                    InvocationData = "",
-                    Arguments = "",
+                    InvocationData = new InvocationData("", "", "", ""),
                     CreatedAt = database.GetServerTimeUtc(),
                     Parameters = new Dictionary<string, string>()
                     {

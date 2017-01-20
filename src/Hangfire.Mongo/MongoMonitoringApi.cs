@@ -107,7 +107,7 @@ namespace Hangfire.Mongo
                 return new JobDetailsDto
                 {
                     CreatedAt = job.CreatedAt,
-                    Job = DeserializeJob(job.InvocationData, job.Arguments),
+                    Job = DeserializeJob(job.InvocationData),
                     History = history,
                     Properties = job.Parameters
                 };
@@ -323,7 +323,6 @@ namespace Hangfire.Mongo
                         {
                             Id = j.Id,
                             InvocationData = j.InvocationData,
-                            Arguments = j.Arguments,
                             CreatedAt = j.CreatedAt,
                             ExpireAt = j.ExpireAt,
                             StateId = j.StateId,
@@ -351,7 +350,7 @@ namespace Hangfire.Mongo
             foreach (var job in jobs)
             {
                 var stateData = job.StateData;
-                var dto = selector(job, DeserializeJob(job.InvocationData, job.Arguments), stateData);
+                var dto = selector(job, DeserializeJob(job.InvocationData), stateData);
 
                 result.Add(new KeyValuePair<string, TDto>(
                     job.Id.ToString(), dto));
@@ -360,14 +359,11 @@ namespace Hangfire.Mongo
             return new JobList<TDto>(result);
         }
 
-        private static Job DeserializeJob(string invocationData, string arguments)
+        private static Job DeserializeJob(InvocationData invocationData)
         {
-            var data = JobHelper.FromJson<InvocationData>(invocationData);
-            data.Arguments = arguments;
-
             try
             {
-                return data.Deserialize();
+                return invocationData.Deserialize();
             }
             catch (JobLoadException)
             {
@@ -394,7 +390,6 @@ namespace Hangfire.Mongo
                         {
                             Id = j.Id,
                             InvocationData = j.InvocationData,
-                            Arguments = j.Arguments,
                             CreatedAt = j.CreatedAt,
                             ExpireAt = j.ExpireAt,
                             StateId = j.StateId,
@@ -447,7 +442,6 @@ namespace Hangfire.Mongo
                     {
                         Id = job.Id,
                         InvocationData = job.InvocationData,
-                        Arguments = job.Arguments,
                         CreatedAt = job.CreatedAt,
                         ExpireAt = job.ExpireAt,
                         FetchedAt = null,

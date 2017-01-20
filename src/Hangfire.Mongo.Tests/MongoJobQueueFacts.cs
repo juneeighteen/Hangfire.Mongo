@@ -9,6 +9,7 @@ using Hangfire.Mongo.Tests.Utils;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Xunit;
+using Hangfire.Storage;
 
 namespace Hangfire.Mongo.Tests
 {
@@ -126,8 +127,7 @@ namespace Hangfire.Mongo.Tests
             {
                 var job = new JobDto
                 {
-                    InvocationData = "",
-                    Arguments = "",
+                    InvocationData = new InvocationData("", "", "", ""),
                     CreatedAt = connection.GetServerTimeUtc(),
                     Queue = "default"
                 };
@@ -155,8 +155,7 @@ namespace Hangfire.Mongo.Tests
             {
                 var job = new JobDto
                 {
-                    InvocationData = "",
-                    Arguments = "",
+                    InvocationData = new InvocationData("", "", "", ""),
                     CreatedAt = connection.GetServerTimeUtc(),
                     Queue = "default",
                     FetchedAt = connection.GetServerTimeUtc().AddDays(-1)
@@ -181,8 +180,7 @@ namespace Hangfire.Mongo.Tests
             {
                 var job1 = new JobDto
                 {
-                    InvocationData = "",
-                    Arguments = "",
+                    InvocationData = new InvocationData("", "", "", ""),
                     CreatedAt = connection.GetServerTimeUtc(),
                     Queue = "default"
                 };
@@ -190,8 +188,7 @@ namespace Hangfire.Mongo.Tests
 
                 var job2 = new JobDto
                 {
-                    InvocationData = "",
-                    Arguments = "",
+                    InvocationData = new InvocationData("", "", "", ""),
                     CreatedAt = connection.GetServerTimeUtc(),
                     Queue = "default"
                 };
@@ -216,8 +213,7 @@ namespace Hangfire.Mongo.Tests
             {
                 var job1 = new JobDto
                 {
-                    InvocationData = "",
-                    Arguments = "",
+                    InvocationData = new InvocationData("", "", "", ""),
                     CreatedAt = connection.GetServerTimeUtc(),
                     Queue = "critical"
                 };
@@ -236,8 +232,7 @@ namespace Hangfire.Mongo.Tests
             {
                 var criticalJob = new JobDto
                 {
-                    InvocationData = "",
-                    Arguments = "",
+                    InvocationData = new InvocationData("", "", "", ""),
                     CreatedAt = connection.GetServerTimeUtc(),
                     Queue = "critical"
                 };
@@ -245,8 +240,7 @@ namespace Hangfire.Mongo.Tests
 
                 var defaultJob = new JobDto
                 {
-                    InvocationData = "",
-                    Arguments = "",
+                    InvocationData = new InvocationData("", "", "", ""),
                     CreatedAt = connection.GetServerTimeUtc(),
                     Queue = "default"
                 };

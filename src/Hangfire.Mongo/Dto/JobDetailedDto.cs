@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using MongoDB.Bson;
+using Hangfire.Storage;
 
 namespace Hangfire.Mongo.Dto
 {
@@ -9,9 +10,7 @@ namespace Hangfire.Mongo.Dto
     {
         public ObjectId Id { get; set; }
 
-        public string InvocationData { get; set; }
-
-        public string Arguments { get; set; }
+        public InvocationData InvocationData { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

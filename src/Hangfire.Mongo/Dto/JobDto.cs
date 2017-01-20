@@ -3,6 +3,7 @@ using Hangfire.Mongo.MongoUtils;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using System.Collections.Generic;
+using Hangfire.Storage;
 
 namespace Hangfire.Mongo.Dto
 {
@@ -12,6 +13,7 @@ namespace Hangfire.Mongo.Dto
         public JobDto()
         {
             Parameters = new Dictionary<string, string>();
+            InvocationData = new InvocationData(null, null, null, null);
         }
 
         [BsonId()]
@@ -21,9 +23,7 @@ namespace Hangfire.Mongo.Dto
 
         public string StateName { get; set; }
 
-        public string InvocationData { get; set; }
-
-        public string Arguments { get; set; }
+        public InvocationData InvocationData { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

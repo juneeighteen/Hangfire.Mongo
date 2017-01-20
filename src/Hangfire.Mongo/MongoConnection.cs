@@ -73,8 +73,7 @@ namespace Hangfire.Mongo
 
             var jobDto = new JobDto
             {
-                InvocationData = JobHelper.ToJson(invocationData),
-                Arguments = invocationData.Arguments,
+                InvocationData = invocationData,
                 CreatedAt = createdAt,
                 ExpireAt = createdAt.Add(expireIn),
                 Parameters = parameters
@@ -148,16 +147,13 @@ namespace Hangfire.Mongo
             if (jobData == null)
                 return null;
 
-            // TODO: conversion exception could be thrown.
-            var invocationData = JobHelper.FromJson<InvocationData>(jobData.InvocationData);
-            invocationData.Arguments = jobData.Arguments;
 
             Job job = null;
             JobLoadException loadException = null;
 
             try
             {
-                job = invocationData.Deserialize();
+                job = jobData.InvocationData.Deserialize();
             }
             catch (JobLoadException ex)
             {
